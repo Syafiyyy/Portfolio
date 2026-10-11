@@ -7,6 +7,7 @@ import { ChessBoard } from "@/components/signatures/chess-board";
 import { CountUp } from "@/components/count-up";
 import { Magnetic } from "@/components/magnetic";
 import { TextLink } from "@/components/text-link";
+import { Divider } from "@/components/divider";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -45,7 +46,8 @@ export default function Page() {
       </section>
 
       {/* DriveCover */}
-      <section className="border-t">
+      <section className="relative isolate bg-band">
+        <Divider />
         <div className="mx-auto max-w-5xl px-5 py-20">
           <div className="max-w-2xl">
             <Heading id="drivecover" kicker="~/work/drivecover">
@@ -87,7 +89,8 @@ export default function Page() {
       </section>
 
       {/* Projects */}
-      <section className="border-t">
+      <section className="relative isolate">
+        <Divider />
         <div className="mx-auto max-w-5xl px-5 py-20">
           <Heading id="projects" kicker="~/projects">
             Other projects
@@ -118,7 +121,8 @@ export default function Page() {
       </section>
 
       {/* Education */}
-      <section className="border-t">
+      <section className="relative isolate">
+        <Divider />
         <div className="mx-auto max-w-5xl px-5 py-20">
           <Heading id="education" kicker="~/education">
             Education
@@ -139,7 +143,8 @@ export default function Page() {
       </section>
 
       {/* Contact */}
-      <section className="border-t">
+      <section className="relative isolate">
+        <Divider />
         <div className="mx-auto max-w-5xl px-5 pb-28 pt-20">
           <Heading id="contact" kicker="~/contact">
             Contact

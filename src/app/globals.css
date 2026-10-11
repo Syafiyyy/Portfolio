@@ -23,6 +23,7 @@
   --muted: #4f5d73;
   --line: #d6dde8;
   --surface: #ffffff;
+  --band: #edf1f6;
   --sky: #0369a1;
   --amber: #b45309;
   --amber-soft: #fde9c8;
@@ -38,6 +39,7 @@
   --muted: #8a97ab;
   --line: #1d2738;
   --surface: #0f1729;
+  --band: #0e1628;
   --sky: #38bdf8;
   --amber: #f5a524;
   --amber-soft: #3a2a10;
@@ -53,6 +55,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-surface: var(--surface);
+  --color-band: var(--band);
   --color-sky: var(--sky);
   --color-amber: var(--amber);
   --color-amber-soft: var(--amber-soft);
@@ -282,6 +285,20 @@
   mask-image: radial-gradient(ellipse 80% 70% at 70% 30%, #000 20%, transparent 75%);
 }
 
+/* The hero grid echoed at a section boundary: same 48px cells, centred the
+   same way so the columns line up, fading out downward and toward the sides. */
+.grid-echo {
+  --echo: color-mix(in srgb, var(--line) 60%, transparent);
+  background-image:
+    linear-gradient(to right, var(--echo) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--echo) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+  mask-image:
+    linear-gradient(to bottom, #000, transparent),
+    linear-gradient(to right, transparent, #000 25%, #000 75%, transparent);
+  mask-composite: intersect;
+}
 /* Intro guard: set in <head> before first paint, removed once GSAP takes over. */
 [data-intro="play"] [data-intro-part],
 [data-intro="claimed"] [data-intro-part] {
