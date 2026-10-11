@@ -27,70 +27,81 @@ export function Trace() {
   const [played, setPlayed] = useState(false);
 
   useIsoLayoutEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const centers = () =>
-      nodes.current.map((n) => {
-        if (!n || !rail.current) return 0;
-        const r = rail.current.getBoundingClientRect();
-        const b = n.getBoundingClientRect();
-        return b.top - r.top + b.height / 2;
-      });
+    // Dot positions are measured, and re-measured whenever ScrollTrigger
+    // refreshes (resize), via function-based values.
+    const center = (i: number) => {
+      const n = nodes.current[i];
+      if (!n || !rail.current) return 0;
+      const r = rail.current.getBoundingClientRect();
+      const b = n.getBoundingClientRect();
+      return b.top - r.top + b.height / 2;
+    };
+    const count = TRACE.length;
 
     const showFinal = () => {
-      const c = centers();
       gsap.set(glows.current, { opacity: 1 });
       gsap.set(logs.current, { opacity: 1, y: 0 });
-      gsap.set(dot.current, { opacity: 1, y: c[c.length - 1] });
+      gsap.set(dot.current, { opacity: 1, y: center(count - 1) });
       gsap.set(done.current, { opacity: 1 });
       setPlayed(true);
     };
 
     const build = () => {
-      const c = centers();
       const t = gsap.timeline({ paused: true, onComplete: () => setPlayed(true) });
       t.set(glows.current, { opacity: 0 })
         .set(logs.current, { opacity: 0, y: 4 })
         .set(done.current, { opacity: 0 })
-        .set(dot.current, { y: c[0], opacity: 0 })
+        .set(dot.current, { y: () => center(0), opacity: 0 })
         .to(dot.current, { opacity: 1, duration: FADE, ease: EASE_OUT });
 
-      c.forEach((y, i) => {
-        if (i > 0) t.to(dot.current, { y, duration: TRAVEL, ease: "power2.inOut" }, `+=${HOLD}`);
+      for (let i = 0; i < count; i++) {
+        if (i > 0) t.to(dot.current, { y: () => center(i), duration: TRAVEL, ease: "power2.inOut" }, `+=${HOLD}`);
         t.to(glows.current[i], { opacity: 1, duration: FADE, ease: EASE_OUT })
           .to(logs.current[i], { opacity: 1, y: 0, duration: FADE, ease: EASE_OUT }, "<");
-      });
+      }
       t.to(done.current, { opacity: 1, duration: FADE, ease: EASE_OUT }, `+=${HOLD / 2}`);
       return t;
     };
 
-    const ctx = gsap.context(() => {
-      if (reduce) {
-        showFinal();
-        return;
-      }
+    const mm = gsap.matchMedia(root);
+
+    // Desktop: pin the trace and let scrolling move the claim (~150vh).
+    mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
       tl.current = build();
+      ScrollTrigger.create({
+        trigger: root.current,
+        // Centre it in the space below the sticky nav (h-14).
+        start: "center center+=28",
+        end: "+=150%",
+        pin: true,
+        scrub: 0.6,
+        animation: tl.current,
+        invalidateOnRefresh: true,
+      });
+    });
+
+    // Small screens: no pinning; play once on enter, as v1 did.
+    mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
+      const t = (tl.current = build());
       ScrollTrigger.create({
         trigger: root.current,
         start: "top 65%",
         once: true,
-        onEnter: () => tl.current?.play(0),
+        onEnter: () => t.play(0),
       });
-    }, root);
+      // Re-measure the dot's stops on resize, keeping its place.
+      const onRefresh = () => t.invalidate().progress(t.progress());
+      ScrollTrigger.addEventListener("refresh", onRefresh);
+      return () => ScrollTrigger.removeEventListener("refresh", onRefresh);
+    });
 
-    const onResize = () => {
-      if (reduce) return showFinal();
-      const progress = tl.current?.progress() ?? 0;
-      tl.current?.kill();
-      tl.current = build();
-      tl.current.progress(progress);
-    };
-    window.addEventListener("resize", onResize);
+    mm.add("(prefers-reduced-motion: reduce)", () => {
+      showFinal();
+      ScrollTrigger.addEventListener("refresh", showFinal);
+      return () => ScrollTrigger.removeEventListener("refresh", showFinal);
+    });
 
-    return () => {
-      window.removeEventListener("resize", onResize);
-      ctx.revert();
-    };
+    return () => mm.revert();
   }, []);
 
   const replay = () => {

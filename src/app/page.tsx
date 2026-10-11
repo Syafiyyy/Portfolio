@@ -4,6 +4,8 @@ import { Heading } from "@/components/heading";
 import { Portrait } from "@/components/portrait";
 import { DamageScan } from "@/components/car/damage-scan";
 import { ChessBoard } from "@/components/signatures/chess-board";
+import { CountUp } from "@/components/count-up";
+import { Magnetic } from "@/components/magnetic";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -26,12 +28,16 @@ export default function Page() {
             </h1>
             <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>
             <div data-intro-part="late" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
-              <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
-                See how a claim moves through DriveCover
-              </a>
-              <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
-                Download resume
-              </a>
+              <Magnetic>
+                <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
+                  See how a claim moves through DriveCover
+                </a>
+              </Magnetic>
+              <Magnetic>
+                <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+                  Download resume
+                </a>
+              </Magnetic>
             </div>
           </div>
         </div>
@@ -60,7 +66,9 @@ export default function Page() {
             {DRIVECOVER.facts.map((f) => (
               <div key={f.label} className="bg-bg p-5">
                 <dt className="sr-only">{f.label}</dt>
-                <dd className="font-mono text-2xl">{f.value}</dd>
+                <dd className="font-mono text-2xl">
+                  <CountUp value={f.value} />
+                </dd>
                 <dd className="mt-1 text-sm leading-snug text-muted">{f.label}</dd>
               </div>
             ))}
