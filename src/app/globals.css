@@ -26,6 +26,10 @@
   --sky: #0369a1;
   --amber: #b45309;
   --amber-soft: #fde9c8;
+  --board-light: #e6ebf2;
+  --board-dark: #bcc8d8;
+  --piece-white: #ffffff;
+  --piece-black: #1e293b;
 }
 
 .dark {
@@ -37,6 +41,10 @@
   --sky: #38bdf8;
   --amber: #f5a524;
   --amber-soft: #3a2a10;
+  --board-light: #3a4a64;
+  --board-dark: #26334a;
+  --piece-white: #f1f5f9;
+  --piece-black: #0b1220;
 }
 
 @theme inline {
@@ -179,4 +187,34 @@
   border: 1px solid color-mix(in srgb, var(--sky) 45%, transparent);
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--sky) 10%, transparent), transparent);
+}
+
+/* Chess signature. Pieces are <use> clones, so colours reach the shapes
+   through inherited properties (fill, stroke, --accent), not selectors. */
+.chess-white {
+  fill: var(--piece-white);
+  stroke: var(--piece-black);
+  --accent: var(--piece-black);
+}
+.chess-black {
+  fill: var(--piece-black);
+  stroke: #a3b1c6;
+  --accent: #a3b1c6;
+}
+.chess-white,
+.chess-black {
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.chess-eye {
+  fill: var(--accent);
+  stroke: none;
+}
+.chess-cut {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+}
+.chess-move[data-active] {
+  color: var(--sky);
 }

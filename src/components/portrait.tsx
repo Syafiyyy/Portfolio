@@ -46,20 +46,20 @@ export function Portrait() {
     let dpr = 1;
     let cols = 0;
     let rows = 0;
-    let lum = new Float32Array(0); // 0..1 brightness per cell
+    let lum = new Float32Array(0); // 0..1 brightness per cell, -1 = transparent
     let hover = new Float32Array(0); // 0..1 hover cover per cell
     let scanY = intro ? -1 : Infinity; // CSS px; cells below are covered. -1 = not started
     let revealing = false;
     let pointer: { x: number; y: number } | null = null;
     let raf = 0;
     let last = 0;
-    let colors = { bg: "#0b1220", sky: "#38bdf8" };
+    let colors = { bg: "#0f1729", sky: "#38bdf8" }; // bg = the box colour (--surface)
     let loaded = false;
     let disposed = false;
 
     const readColors = () => {
       const cs = getComputedStyle(document.documentElement);
-      colors = { bg: cs.getPropertyValue("--bg").trim() || colors.bg, sky: cs.getPropertyValue("--sky").trim() || colors.sky };
+      colors = { bg: cs.getPropertyValue("--surface").trim() || colors.bg, sky: cs.getPropertyValue("--sky").trim() || colors.sky };
     };
 
     // Sample the photo's brightness per cell, cropped like object-cover.
@@ -86,8 +86,12 @@ export function Portrait() {
       const data = octx.getImageData(0, 0, cols, rows).data;
       lum = new Float32Array(cols * rows);
       for (let i = 0; i < lum.length; i++) {
-        const l = (0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2]) / 255;
-        lum[i] = l;
+        // Cut-out photos: no dot where the background is transparent.
+        if (data[i * 4 + 3] < 64) {
+          lum[i] = -1;
+          continue;
+        }
+        lum[i] = (0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2]) / 255;
       }
       hover = new Float32Array(cols * rows);
     };
@@ -110,6 +114,7 @@ export function Portrait() {
           ctx.globalAlpha = c;
           ctx.fillStyle = colors.bg;
           ctx.fillRect(x * CELL, y * CELL, CELL + 0.5, CELL + 0.5);
+          if (lum[i] < 0) continue;
           const r = (CELL / 2) * (0.12 + 0.88 * Math.sqrt(lum[i]));
           ctx.fillStyle = colors.sky;
           ctx.beginPath();

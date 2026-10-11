@@ -11,7 +11,7 @@ The hero belongs to Adam. A large portrait sits on the right (desktop) / top (mo
 - The photo starts as a **dot-matrix / halftone** version of itself (draw it to a canvas, sample brightness, render dots in sky blue).
 - A scan line (same visual language as the car scan) sweeps down and **reveals the real photo** behind it. The intro sequence ends on this reveal.
 - On hover the dots briefly return under the cursor (small radius), then settle.
-- Large: about 400 px wide on desktop. Source photo: `public/adam-portrait.jpg`, at least 900 × 1200 px, portrait orientation (3:4), face roughly centred in the upper half. Until it exists, `public/adam.jpg` (238 × 309) stands in.
+- Large: about 400 px wide on desktop. Photo: `public/adam-portrait.webp`, 900 × 1200 (3:4) WebP with a transparent background, made from the cut-out original in `assets-src/adam-portrait.png` (not committed). The halftone draws dots only on the person.
 
 ### 2. DriveCover: the AI damage scan (React Three Fiber)
 Lives in the DriveCover section, directly above Trace a claim. It is the visual for the trace's **Gemini vision** step ("reads the photos and estimates the damage") and plays when it scrolls into view, not in the intro.
@@ -38,12 +38,13 @@ Plays once per session (sessionStorage). Skip entirely with `prefers-reduced-mot
 ## Project signature animations
 Rule: every project gets its own small signature animation tied to what it actually does. No generic hover effects standing in for one.
 
-### Chess club app: a real opening with an evaluation bar
-- A small chessboard (SVG, about 280 px) beside the project text. A short, real opening plays out move by move (planned: Italian Game, 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6, about 8 plies), with each move's from/to squares highlighted.
-- A vertical evaluation bar beside the board moves after each move, Stockfish-style (white share from the top, number in mono, e.g. `+0.3`).
+### Chess club app: Légal's mate with an evaluation bar
+- A small chessboard (SVG, about 300 px) beside the project text plays **Légal's mate** (1.e4 e5 2.Nf3 d6 3.Bc4 Bg4 4.Nc3 g6 5.Nxe5 Bxd1 6.Bxf7+ Ke7 7.Nd5#), with each move's from/to squares highlighted.
+- Why this line: it is a classic beginner trap, which is what the app's adjustable Stockfish opponent helps players learn to avoid, and the eval genuinely swings (about +0.3, then +2.00, then mate in 2 the moment Black takes the queen). The caption says so.
+- A vertical evaluation bar beside the board moves after each move, Stockfish-style (White fills from the bottom, Lichess-style; number in mono, e.g. `+0.36`).
 - Honesty: the evals are real. Compute them once with Stockfish (the `stockfish` npm WASM build, fixed depth such as 18) in a small script, and store moves + evals in `site.ts` with a note on engine and depth. No made-up numbers.
 - Plays once when it scrolls into view, then loops slowly while visible; pauses off screen. Reduced motion: final position and its eval, static.
-- Pieces: draw a simple flat SVG set in-house, or use a CC0 set; check the licence before using any third-party set (many popular sets are GPL or CC BY-SA).
+- Pieces: a flat SVG set drawn in-house (no third-party licence).
 - No chess library needed at runtime: the moves are fixed, so store from/to squares (plus castling/capture flags) and animate pieces with transforms.
 
 ## Supporting polish (subtle, not more signatures)
@@ -65,6 +66,6 @@ Rule: every project gets its own small signature animation tied to what it actua
 1. Lenis + intro sequence + heading reveals. (done)
 2. Car with scan effect. (done, first in the hero)
 3. Change of direction: hero portrait (halftone + scan reveal + hover dots), intro ends on the reveal; car scan moves into DriveCover above Trace a claim, plays on view.
-4. Chess club signature animation (precomputed Stockfish evals).
+4. Chess club signature animation (precomputed Stockfish evals: `scripts/chess-evals.mjs`).
 5. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.
 6. Mobile, reduced motion, performance pass, then push to `main` (Vercel deploys automatically).

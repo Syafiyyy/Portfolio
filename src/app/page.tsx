@@ -3,6 +3,7 @@ import { CopyEmail } from "@/components/copy-email";
 import { Heading } from "@/components/heading";
 import { Portrait } from "@/components/portrait";
 import { DamageScan } from "@/components/car/damage-scan";
+import { ChessBoard } from "@/components/signatures/chess-board";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -85,14 +86,17 @@ export default function Page() {
                   <p className="font-medium">{p.name}</p>
                   <p className="text-sm text-muted">{p.period}</p>
                 </div>
-                <div>
-                  <p className="max-w-[65ch] leading-relaxed text-muted">{p.description}</p>
-                  <p className="mt-2 text-sm">{p.stack.join(", ")}</p>
-                  {p.href && (
-                    <a href={p.href} className="mt-2 inline-block text-sm font-medium text-sky underline-offset-4 hover:underline">
-                      View project
-                    </a>
-                  )}
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
+                  <div>
+                    <p className="max-w-[65ch] leading-relaxed text-muted">{p.description}</p>
+                    <p className="mt-2 text-sm">{p.stack.join(", ")}</p>
+                    {p.href && (
+                      <a href={p.href} className="mt-2 inline-block text-sm font-medium text-sky underline-offset-4 hover:underline">
+                        View project
+                      </a>
+                    )}
+                  </div>
+                  {p.signature === "chess" && <ChessBoard />}
                 </div>
               </li>
             ))}
