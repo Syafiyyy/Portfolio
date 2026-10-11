@@ -3,7 +3,7 @@
 export const SITE = {
   name: "Adam Syafi",
   fullName: "Adam Syafi Bin Abdul Aziz",
-  url: "https://adamsyafi.vercel.app",
+  url: "https://portfolio-blond-nu-58.vercel.app",
   location: "Selangor, Malaysia",
   headline: "I build backend systems that handle real money and real claims.",
   intro:
