@@ -4,6 +4,7 @@
 @import "@fontsource/ibm-plex-sans/600.css";
 @import "@fontsource/ibm-plex-mono/400.css";
 @import "@fontsource/ibm-plex-mono/500.css";
+@import "lenis/dist/lenis.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -55,9 +56,6 @@
   * {
     border-color: var(--line);
   }
-  html {
-    scroll-behavior: smooth;
-  }
   body {
     background: var(--bg);
     color: var(--fg);
@@ -76,9 +74,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   *,
   *::before,
   *::after {
@@ -87,17 +82,17 @@
   }
 }
 
-/* One page-load fade for the hero, 300ms, opacity + small translate only. */
-@keyframes enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Hero background grid: hairlines that fade out toward the edges. */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+  mask-image: radial-gradient(ellipse 80% 70% at 70% 30%, #000 20%, transparent 75%);
 }
-.enter {
-  animation: enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+
+/* Intro guard: set in <head> before first paint, removed once GSAP takes over. */
+[data-intro="play"] [data-intro-part] {
+  opacity: 0;
 }

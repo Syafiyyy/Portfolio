@@ -1,45 +1,41 @@
 import { Trace } from "@/components/trace";
 import { CopyEmail } from "@/components/copy-email";
+import { Heading } from "@/components/heading";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
-
-function Heading({ children, id }: { children: React.ReactNode; id?: string }) {
-  return (
-    <h2 id={id} className="scroll-mt-20 text-2xl font-semibold tracking-tight">
-      {children}
-    </h2>
-  );
-}
 
 export default function Page() {
   return (
     <main id="top" className="pb-24">
       {/* Hero */}
-      <section className="mx-auto max-w-5xl px-5 pb-20 pt-20 sm:pt-28">
-        <div className="enter max-w-3xl">
-          <div className="flex items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={SITE.photo}
-              alt={`Photo of ${SITE.name}`}
-              width={56}
-              height={72}
-              className="h-[72px] w-14 rounded-md border object-cover"
-            />
-            <p className="text-muted">
-              {SITE.name}, {SITE.location}
-            </p>
-          </div>
-          <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
-            {SITE.headline}
-          </h1>
-          <p className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
-            <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
-              See how a claim moves through DriveCover
-            </a>
-            <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
-              Download resume
-            </a>
+      <section className="relative overflow-hidden">
+        <div aria-hidden data-intro-part="grid" className="hero-grid pointer-events-none absolute inset-0" />
+        <div className="relative mx-auto max-w-5xl px-5 pb-20 pt-20 sm:pt-28">
+          <div className="max-w-3xl">
+            <div data-intro-part="eyebrow" className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={SITE.photo}
+                alt={`Photo of ${SITE.name}`}
+                width={56}
+                height={72}
+                className="h-[72px] w-14 rounded-md border object-cover"
+              />
+              <p className="text-muted">
+                {SITE.name}, {SITE.location}
+              </p>
+            </div>
+            <h1 data-intro-part="headline" className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+              {SITE.headline}
+            </h1>
+            <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>
+            <div data-intro-part="late" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
+              <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
+                See how a claim moves through DriveCover
+              </a>
+              <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+                Download resume
+              </a>
+            </div>
           </div>
         </div>
       </section>

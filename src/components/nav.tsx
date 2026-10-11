@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { SITE } from "@/data/site";
 
@@ -12,12 +12,16 @@ const LINKS = [
 
 export function Nav() {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // false during SSR and hydration, true after: avoids a theme label mismatch.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const isDark = resolvedTheme === "dark";
 
   return (
-    <header className="sticky top-0 z-20 border-b bg-bg/90 backdrop-blur-sm">
+    <header data-intro-part="late" className="sticky top-0 z-20 border-b bg-bg/90 backdrop-blur-sm">
       <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5 text-sm">
         <a href="#top" className="font-medium">
           {SITE.name}
