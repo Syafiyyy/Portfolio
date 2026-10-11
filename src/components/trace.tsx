@@ -158,17 +158,29 @@ export function Trace() {
             Replay claim
           </button>
         </div>
-        <ol className="space-y-3 overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+        {/* Lines wrap under their own text (hanging indent past the line
+            number) instead of scrolling sideways on narrow screens. */}
+        <ol className="space-y-3 p-4 font-mono text-[12px] leading-relaxed sm:text-[13px]">
           {TRACE.map((step, i) => (
             <li
               key={step.log}
               ref={(el) => {
                 logs.current[i] = el;
               }}
-              className="whitespace-pre opacity-0"
+              className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-[1ch] opacity-0"
             >
-              <span className="text-muted">{String(i + 1).padStart(2, "0")} </span>
-              {step.log}
+              <span className="text-muted">{String(i + 1).padStart(2, "0")}</span>
+              <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {/* Keep each token whole (no break inside "CLM-2611-0042");
+                    a token wider than the line still breaks. */}
+                {step.log.split(/(\s+)/).map((t, j) =>
+                  j % 2 ? t : (
+                    <span key={j} className="inline-block max-w-full">
+                      {t}
+                    </span>
+                  ),
+                )}
+              </span>
             </li>
           ))}
         </ol>
