@@ -16,9 +16,19 @@ export default function Page() {
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-5 pb-20 pt-20 sm:pt-28">
         <div className="enter max-w-3xl">
-          <p className="text-muted">
-            {SITE.name}, {SITE.location}
-          </p>
+          <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={SITE.photo}
+              alt={`Photo of ${SITE.name}`}
+              width={56}
+              height={72}
+              className="h-[72px] w-14 rounded-md border object-cover"
+            />
+            <p className="text-muted">
+              {SITE.name}, {SITE.location}
+            </p>
+          </div>
           <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
             {SITE.headline}
           </h1>

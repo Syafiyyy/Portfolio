@@ -9,6 +9,7 @@ export const SITE = {
   intro:
     "IT student at Universiti Poly-Tech Malaysia. I like the parts of software most people never see: payments, permissions, and the rules that decide who gets paid.",
   resume: "/Resume_Adam_Syafi.pdf",
+  photo: "/adam.jpg",
   email: "adamsyafi133@gmail.com",
   links: {
     github: "https://github.com/Syafiyyy",
