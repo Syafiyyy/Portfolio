@@ -18,6 +18,12 @@ export const metadata: Metadata = {
     locale: "en_MY",
     type: "website",
   },
+  // Images for both come from opengraph-image.png / twitter-image.png.
+  twitter: {
+    card: "summary_large_image",
+    title: SITE.name,
+    description: SITE.headline,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

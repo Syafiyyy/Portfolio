@@ -39,7 +39,7 @@ export function DamageScan() {
   const [cued, setCued] = useState(false);
   const [active, setActive] = useState(false);
   const [scanned, setScanned] = useState(false);
-  const [env, setEnv] = useState({ reduced: false, lowEnd: false, interactive: false });
+  const [env, setEnv] = useState({ reduced: false, lowEnd: false, interactive: false, webgl: true });
 
   useEffect(() => {
     const el = box.current;
@@ -49,18 +49,28 @@ export function DamageScan() {
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8;
     const reduced = mq("(prefers-reduced-motion: reduce)");
 
-    // Near the viewport: load three and the model. On screen: render.
+    // Near the viewport: load three and the model in an idle moment, so its
+    // parse cost doesn't land on top of page load. On screen: render.
+    let idle = 0;
+    const whenIdle = (fn: () => void) =>
+      typeof window.requestIdleCallback === "function" ? (idle = window.requestIdleCallback(fn, { timeout: 2000 })) : fn();
     const near = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) return;
-        setEnv({
-          reduced,
-          lowEnd: mq("(pointer: coarse)") || cores <= 4 || memory <= 4,
-          // Touch drags would fight page scroll, so only fine pointers can rotate.
-          interactive: mq("(pointer: fine)"),
-        });
-        setMount(true);
         near.disconnect();
+        whenIdle(() => {
+          const probe = document.createElement("canvas");
+          const webgl = !!(probe.getContext("webgl2") || probe.getContext("webgl"));
+          setEnv({
+            reduced,
+            webgl,
+            lowEnd: mq("(pointer: coarse)") || cores <= 4 || memory <= 4,
+            // Touch drags would fight page scroll, so only fine pointers can rotate.
+            interactive: mq("(pointer: fine)"),
+          });
+          // No WebGL: keep the poster as the picture instead of a 3D scene.
+          setMount(webgl);
+        });
       },
       { rootMargin: "600px 0px" },
     );
@@ -78,6 +88,7 @@ export function DamageScan() {
     onScreen.observe(el);
     inView.observe(el);
     return () => {
+      if (idle) window.cancelIdleCallback(idle);
       near.disconnect();
       onScreen.disconnect();
       inView.disconnect();
@@ -95,9 +106,19 @@ export function DamageScan() {
       </div>
 
       <div ref={box} className="scan-stage relative aspect-[4/3] w-full sm:aspect-[2/1]">
-        <div aria-hidden className={`absolute inset-0 flex items-end justify-center pb-[12%] transition-opacity duration-500 ${shown ? "opacity-0" : "opacity-100"}`}>
-          <div className="scan-bed" />
-        </div>
+        {/* Poster: a still of this scene. A faint ghost while three.js loads
+            (the real car then rises into it); the full picture without WebGL. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/models/car-poster.webp"
+          alt=""
+          aria-hidden
+          width={1400}
+          height={700}
+          loading="lazy"
+          decoding="async"
+          className={`absolute inset-0 size-full object-cover transition-opacity duration-500 ${shown ? "opacity-0" : env.webgl ? "opacity-30" : "opacity-100"}`}
+        />
         {mount && (
           <div
             className={`absolute inset-0 transition-opacity duration-700 ease-out ${shown ? "opacity-100" : "opacity-0"} ${env.interactive ? "cursor-grab active:cursor-grabbing" : ""}`}

@@ -67,5 +67,5 @@ Rule: every project gets its own small signature animation tied to what it actua
 2. Car with scan effect. (done, first in the hero)
 3. Change of direction: hero portrait (halftone + scan reveal + hover dots), intro ends on the reveal; car scan moves into DriveCover above Trace a claim, plays on view.  (done)
 4. Chess club signature animation (precomputed Stockfish evals: `scripts/chess-evals.mjs`).  (done)
-5. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.
-6. Mobile, reduced motion, performance pass, then push to `main` (Vercel deploys automatically).
+5. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.  (done)
+6. Mobile, reduced motion, performance pass, Open Graph image, car poster, Lighthouse, then push to `main` (Vercel deploys automatically).  (done)

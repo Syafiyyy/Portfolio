@@ -10,18 +10,25 @@ gsap.registerPlugin(SplitText);
 const KEY = "intro-played";
 
 // Runs before first paint (inlined in <head>). Marks the page so CSS hides the
-// intro pieces until GSAP takes over; the timeout un-hides them if JS never runs.
+// intro pieces until GSAP takes over. If the app hasn't claimed the intro
+// ("play" -> "claimed") within 1.5 s, e.g. on a slow phone, the intro is
+// skipped and the page shows at once rather than staying blank.
 export const INTRO_BOOT = `(function(){try{
 var d=document.documentElement;
 if(sessionStorage.getItem("${KEY}")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
 d.dataset.intro="play";
-setTimeout(function(){if(d.dataset.intro==="play")delete d.dataset.intro},4000);
+setTimeout(function(){if(d.dataset.intro==="play")delete d.dataset.intro},1500);
 }catch(e){}})();`;
 
 // Decided once per page load, so React strict mode's double effect still plays it.
 let shouldPlay: boolean | null = null;
 export function introPlaying() {
-  if (shouldPlay === null) shouldPlay = document.documentElement.dataset.intro === "play";
+  if (shouldPlay === null) {
+    const d = document.documentElement;
+    shouldPlay = d.dataset.intro === "play";
+    // Claim it so the boot script's deadline no longer applies.
+    if (shouldPlay) d.dataset.intro = "claimed";
+  }
   return shouldPlay;
 }
 
@@ -50,7 +57,8 @@ export function Intro() {
 
     // Split after fonts load so line breaks match the final text.
     document.fonts.ready.then(() => {
-      if (cancelled) return;
+      // Gave up waiting (see below): the page is already showing, don't hide it.
+      if (cancelled || d.dataset.intro !== "claimed") return;
       ctx = gsap.context(() => {
         const q = (s: string) => gsap.utils.toArray<HTMLElement>(`[data-intro-part="${s}"]`);
         const all = gsap.utils.toArray<HTMLElement>("[data-intro-part]");
@@ -85,8 +93,12 @@ export function Intro() {
       } catch {}
     });
 
-    // If the intro stalls (e.g. fonts never resolve), still reveal the photo.
-    const fallback = window.setTimeout(firePortraitCue, 3000);
+    // If the intro stalls (e.g. fonts never resolve), show the page and
+    // reveal the photo without it.
+    const fallback = window.setTimeout(() => {
+      if (d.dataset.intro === "claimed") delete d.dataset.intro;
+      firePortraitCue();
+    }, 2500);
 
     return () => {
       window.clearTimeout(fallback);

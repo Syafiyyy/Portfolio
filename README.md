@@ -18,3 +18,6 @@ npm run dev
 ## Credits
 
 Started from [dillionverma/portfolio](https://github.com/dillionverma/portfolio) (MIT, see `LICENSE`), then redesigned.
+
+- Car model: Kenney [Car Kit](https://kenney.nl/assets/car-kit) (CC0), compressed with gltf-transform.
+- Chess evals: computed once with [Stockfish](https://stockfishchess.org) 17.1 via `scripts/chess-evals.mjs`; the engine itself is not part of this repo.

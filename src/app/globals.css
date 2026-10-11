@@ -101,7 +101,8 @@
 }
 
 /* Intro guard: set in <head> before first paint, removed once GSAP takes over. */
-[data-intro="play"] [data-intro-part] {
+[data-intro="play"] [data-intro-part],
+[data-intro="claimed"] [data-intro-part] {
   opacity: 0;
 }
 
@@ -178,15 +179,6 @@
     top: auto;
     bottom: 100%;
   }
-}
-
-/* Damage scan placeholder: the empty scanner bed, shown while the model loads. */
-.scan-bed {
-  width: 62%;
-  aspect-ratio: 3 / 1;
-  border: 1px solid color-mix(in srgb, var(--sky) 45%, transparent);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--sky) 10%, transparent), transparent);
 }
 
 /* Chess signature. Pieces are <use> clones, so colours reach the shapes
