@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { SCAN } from "@/data/site";
 import { applyScan, createScanPlaneMaterial, createScanUniforms, MAX_ZONES, type ScanUniforms } from "./scan-material";
@@ -13,13 +13,13 @@ const MODEL = "/models/car.glb";
 /*
   Damage zones in car space (Kenney sedan: front is +Z, 2.55 long, 1.3 tall).
   Boxes were measured from the model's texture regions: the grey front bumper
-  and the yellow right-hand headlamp.
+  and the yellow right-hand headlamp. `label` is where each label is pinned.
 */
 const ZONES: Record<(typeof SCAN.parts)[number]["part"], { min: THREE.Vector3Tuple; max: THREE.Vector3Tuple; label: THREE.Vector3Tuple }> = {
-  bumper: { min: [-0.72, 0.12, 1.0], max: [0.72, 0.5, 1.34], label: [-0.3, 0.32, 1.34] },
-  headlamp: { min: [0.26, 0.56, 0.98], max: [0.7, 0.78, 1.3], label: [0.52, 0.7, 1.26] },
+  bumper: { min: [-0.72, 0.15, 1.05], max: [0.72, 0.47, 1.34], label: [-0.55, 0.3, 1.3] },
+  headlamp: { min: [0.26, 0.56, 0.98], max: [0.7, 0.78, 1.3], label: [0.5, 0.67, 1.2] },
 };
-const PARTS = SCAN.parts.slice(0, MAX_ZONES);
+export const PARTS = SCAN.parts.slice(0, MAX_ZONES);
 
 // Scan cycle, seconds.
 const SWEEP = 1.8; // plane travels top → bottom
@@ -39,6 +39,7 @@ PARTS.forEach((p, i) => {
 });
 const toCam = new THREE.Vector3();
 const front = new THREE.Vector3();
+const anchor = new THREE.Vector3();
 
 const CAMERA: THREE.Vector3Tuple = [3.4, 1.75, 3.7];
 const TARGET: THREE.Vector3Tuple = [0, 0.55, 0];
@@ -49,13 +50,16 @@ type Props = {
   colors: SceneColors;
   reduced: boolean;
   lowEnd: boolean;
-  active: boolean; // hero on screen
-  cued: boolean; // intro said the car may rise
+  active: boolean; // stage on screen
+  cued: boolean; // stage scrolled into view: rise, then scan
   interactive: boolean;
+  // DOM labels laid over the canvas, one per part; positioned every frame.
+  labels: React.RefObject<(HTMLDivElement | null)[]>;
   onReady: () => void;
+  onFirstScan: () => void;
 };
 
-export default function CarScene({ colors, reduced, lowEnd, active, cued, interactive, onReady }: Props) {
+export default function CarScene({ colors, reduced, lowEnd, active, cued, interactive, labels, onReady, onFirstScan }: Props) {
   const frameloop = !active ? "never" : reduced || lowEnd ? "demand" : "always";
   return (
     <Canvas
@@ -70,7 +74,7 @@ export default function CarScene({ colors, reduced, lowEnd, active, cued, intera
       <directionalLight position={[4, 6, 5]} intensity={1.5} />
       <directionalLight position={[-3, 2.5, -4.5]} intensity={2.6} color={colors.sky} />
       <Suspense fallback={null}>
-        <Car colors={colors} reduced={reduced} cued={cued} onReady={onReady} />
+        <Car colors={colors} reduced={reduced} cued={cued} labels={labels} onReady={onReady} onFirstScan={onFirstScan} />
       </Suspense>
       <OrbitControls
         enabled={interactive}
@@ -98,13 +102,12 @@ function FrameCap({ fps }: { fps: number }) {
   return null;
 }
 
-function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced" | "cued" | "onReady">) {
+function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props, "colors" | "reduced" | "cued" | "labels" | "onReady" | "onFirstScan">) {
   const { scene } = useGLTF(MODEL, false, true);
   const invalidate = useThree((s) => s.invalidate);
   const root = useRef<THREE.Group>(null);
   const plane = useRef<THREE.Mesh>(null);
-  const labels = useRef<(HTMLDivElement | null)[]>([]);
-  const state = useRef({ rise: reduced ? 1 : 0, scanClock: -1, readySent: false });
+  const state = useRef({ rise: reduced ? 1 : 0, scanClock: -1, readySent: false, scanned: false });
 
 
   // One patched material shared by every mesh on the car.
@@ -135,7 +138,6 @@ function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced
   useEffect(() => {
     if (!reduced) return;
     uniforms.uDamage.value.fill(1);
-    labels.current.forEach((l) => l && (l.style.opacity = "1"));
     invalidate();
   }, [reduced, invalidate]);
 
@@ -157,7 +159,7 @@ function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced
   }, [cued, reduced]);
 
 
-  useFrame(({ clock, camera }, rawDelta) => {
+  useFrame(({ clock, camera, size }, rawDelta) => {
     const g = root.current;
     if (!g) return;
     const s = state.current;
@@ -181,10 +183,19 @@ function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced
     toCam.copy(camera.position).sub(g.position).setY(0).normalize();
     const facing = THREE.MathUtils.smoothstep(front.dot(toCam), 0.05, 0.35);
 
-    if (reduced) {
-      labels.current.forEach((l) => l && (l.style.opacity = String(facing)));
-      return;
-    }
+    // Pin each DOM label to its part's screen position.
+    PARTS.forEach((p, i) => {
+      const l = labels.current[i];
+      if (!l) return;
+      anchor.fromArray(ZONES[p.part].label).applyMatrix4(g.matrixWorld).project(camera);
+      const x = ((anchor.x + 1) / 2) * size.width;
+      const y = ((1 - anchor.y) / 2) * size.height;
+      const lift = (1 - uniforms.uDamage.value[i]) * 4;
+      l.style.transform = `translate(${x.toFixed(1)}px, ${(y + lift).toFixed(1)}px)`;
+      l.style.opacity = (uniforms.uDamage.value[i] * facing).toFixed(3);
+    });
+
+    if (reduced) return;
 
     let scanOn = 0;
     if (s.scanClock >= 0) {
@@ -201,13 +212,11 @@ function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced
         const d = c < HOLD_UNTIL ? Number(uniforms.uScanY.value < centerY) : Math.max(0, 1 - (c - HOLD_UNTIL) / FADE);
         const cur = uniforms.uDamage.value[i];
         uniforms.uDamage.value[i] = d > cur ? Math.min(d, cur + dt / 0.25) : d;
-        const l = labels.current[i];
-        if (l) {
-          const v = uniforms.uDamage.value[i] * facing;
-          l.style.opacity = v.toFixed(3);
-          l.style.transform = `translateY(${(1 - uniforms.uDamage.value[i]) * 4}px)`;
-        }
       });
+      if (!s.scanned && c >= SWEEP) {
+        s.scanned = true;
+        onFirstScan();
+      }
     }
     uniforms.uScanOn.value = scanOn;
     if (plane.current) {
@@ -221,19 +230,6 @@ function Car({ colors, reduced, cued, onReady }: Pick<Props, "colors" | "reduced
       <group ref={root}>
         <primitive object={model} />
         <ContactBlob />
-        {PARTS.map((p, i) => (
-          <Html key={p.part} position={ZONES[p.part].label} zIndexRange={[10, 0]} style={{ pointerEvents: "none" }}>
-            <div
-              ref={(el) => {
-                labels.current[i] = el;
-              }}
-              className="scan-label"
-              style={{ opacity: 0 }}
-            >
-              {p.part} · {p.severity}
-            </div>
-          </Html>
-        ))}
       </group>
       <mesh ref={plane} rotation-x={-Math.PI / 2} material={planeMaterial} visible={false} renderOrder={2}>
         <planeGeometry args={[3.8, 3.8]} />

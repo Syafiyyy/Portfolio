@@ -1,7 +1,8 @@
 import { Trace } from "@/components/trace";
 import { CopyEmail } from "@/components/copy-email";
 import { Heading } from "@/components/heading";
-import { HeroCar } from "@/components/car/hero-car";
+import { Portrait } from "@/components/portrait";
+import { DamageScan } from "@/components/car/damage-scan";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -10,25 +11,15 @@ export default function Page() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div aria-hidden data-intro-part="grid" className="hero-grid pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto grid max-w-5xl items-center gap-6 px-5 pb-20 pt-8 sm:pt-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-4 lg:pt-16">
-          {/* Car sits above the headline on small screens, right of it on large. */}
-          <div data-intro-part="grid" className="mx-auto w-full max-w-md lg:order-2 lg:max-w-none">
-            <HeroCar />
+        <div className="relative mx-auto grid max-w-5xl items-center gap-8 px-5 pb-20 pt-10 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-14 lg:pt-20">
+          {/* Portrait sits above the headline on small screens, right of it on large. */}
+          <div data-intro-part="portrait" className="w-[13.5rem] sm:w-64 lg:order-2 lg:w-full">
+            <Portrait />
           </div>
           <div className="max-w-3xl lg:order-1">
-            <div data-intro-part="eyebrow" className="flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={SITE.photo}
-                alt={`Photo of ${SITE.name}`}
-                width={56}
-                height={72}
-                className="h-[72px] w-14 rounded-md border object-cover"
-              />
-              <p className="text-muted">
-                {SITE.name}, {SITE.location}
-              </p>
-            </div>
+            <p data-intro-part="eyebrow" className="text-muted">
+              {SITE.name}, {SITE.location}
+            </p>
             <h1 data-intro-part="headline" className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl lg:text-[3.4rem]">
               {SITE.headline}
             </h1>
@@ -54,6 +45,10 @@ export default function Page() {
             <p className="mt-4 leading-relaxed">
               Below is one claim, from the moment a driver reports it to the moment it is paid.
             </p>
+          </div>
+
+          <div className="mt-10">
+            <DamageScan />
           </div>
 
           <div className="mt-10">

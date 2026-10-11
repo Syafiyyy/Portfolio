@@ -4,33 +4,47 @@ v1 is live and tidy but too plain. v2 must make a visitor say "wow" in the first
 
 Keep everything that exists (content in `src/data/site.ts`, Trace a claim, sections, colours, IBM Plex). Upgrade the experience on top of it.
 
-## The three signature moments
+## The signature moments
 
-### 1. Hero: the AI damage scan (React Three Fiber)
-- A 3D car on the right side of the hero (left/top on mobile), slowly turning on a dark stage with soft rim light in sky blue.
+### 1. Hero: the animated portrait (shows design + frontend skill)
+The hero belongs to Adam. A large portrait sits on the right (desktop) / top (mobile).
+- The photo starts as a **dot-matrix / halftone** version of itself (draw it to a canvas, sample brightness, render dots in sky blue).
+- A scan line (same visual language as the car scan) sweeps down and **reveals the real photo** behind it. The intro sequence ends on this reveal.
+- On hover the dots briefly return under the cursor (small radius), then settle.
+- Large: about 400 px wide on desktop. Source photo: `public/adam-portrait.jpg`, at least 900 × 1200 px, portrait orientation (3:4), face roughly centred in the upper half. Until it exists, `public/adam.jpg` (238 × 309) stands in.
+
+### 2. DriveCover: the AI damage scan (React Three Fiber)
+Lives in the DriveCover section, directly above Trace a claim. It is the visual for the trace's **Gemini vision** step ("reads the photos and estimates the damage") and plays when it scrolls into view, not in the intro.
+- A 3D car slowly turning on a dark stage with soft rim light in sky blue.
 - Every few seconds a horizontal **scan plane** sweeps across the car (sky-blue line + faint grid glow, like a body scanner). As it passes, two or three parts (front bumper, headlamp, door) **light up amber** and a small label pops beside each: `bumper · moderate`, `headlamp · replace`. Then they fade and the next scan begins.
 - The visitor can drag to rotate the car (OrbitControls, limited angles, no zoom).
 - Write the scan shader yourself (a custom material or `onBeforeCompile` on the car material: compare world-space position to a moving uniform, add emissive band). Do not copy shader code from other demos.
 - Model: Kenney **Car Kit** (CC0) from https://kenney-assets.itch.io/car-kit or https://kenney.nl. Pick one sedan or hatchback, export/convert to `.glb` with `npx gltf-pipeline` or `gltf-transform` and compress (Draco or meshopt). Target under 500 KB. Credit Kenney in README (not required, but kind).
-- Performance: lazy-load the canvas after first paint; `dpr={[1, 1.5]}`; pause rendering when the hero is off screen; on low-end/mobile, cap frame rate. Show a static poster image while it loads.
+- Under the stage, the Gemini vision log line from `TRACE` appears once the first scan finishes. Labels come from `SCAN` in `site.ts`, which mirrors that log (bumper and headlamp, both moderate).
+- Performance: load three.js only when the section nears the viewport; `dpr={[1, 1.5]}`; pause rendering when the hero is off screen; on low-end/mobile, cap frame rate. Show a static poster image while it loads.
 
-### 2. Intro sequence (one orchestrated page load, about 1.6 s total)
+### 3. Intro sequence (one orchestrated page load, about 2 s total)
 1. Background grid fades in.
 2. Headline reveals line by line (split by line, mask + translateY, 120 ms stagger).
-3. The car rises into view and the first scan runs.
-4. Nav and links fade in last.
+3. The halftone portrait fades in; nav and links fade in.
+4. Last: the scan line sweeps down the portrait and reveals the real photo.
 Plays once per session (sessionStorage). Skip entirely with `prefers-reduced-motion`.
 
-### 3. Trace a claim becomes scroll-driven
+### 4. Trace a claim becomes scroll-driven
 - Pin the section and **scrub** the existing GSAP timeline with ScrollTrigger (`scrub: 0.6`), so the amber claim moves as the visitor scrolls. About 150vh of scroll for the whole trace.
 - Keep the Replay button for people who scroll fast.
 - On mobile (<768px) do not pin; play on enter as v1 does.
 
-## The animated photo (shows design + frontend skill)
-- The profile photo starts as a **dot-matrix / halftone** version of itself (draw it to a canvas, sample brightness, render dots in sky blue).
-- A scan line (same visual language as the car) sweeps down and **reveals the real photo** behind it.
-- On hover the dots briefly return under the cursor (small radius), then settle.
-- Make it larger than v1 (about 160 px wide on desktop). Ask Adam for a higher-resolution photo if the current `public/adam.jpg` (238 × 309) looks soft at that size.
+## Project signature animations
+Rule: every project gets its own small signature animation tied to what it actually does. No generic hover effects standing in for one.
+
+### Chess club app: a real opening with an evaluation bar
+- A small chessboard (SVG, about 280 px) beside the project text. A short, real opening plays out move by move (planned: Italian Game, 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6, about 8 plies), with each move's from/to squares highlighted.
+- A vertical evaluation bar beside the board moves after each move, Stockfish-style (white share from the top, number in mono, e.g. `+0.3`).
+- Honesty: the evals are real. Compute them once with Stockfish (the `stockfish` npm WASM build, fixed depth such as 18) in a small script, and store moves + evals in `site.ts` with a note on engine and depth. No made-up numbers.
+- Plays once when it scrolls into view, then loops slowly while visible; pauses off screen. Reduced motion: final position and its eval, static.
+- Pieces: draw a simple flat SVG set in-house, or use a CC0 set; check the licence before using any third-party set (many popular sets are GPL or CC BY-SA).
+- No chess library needed at runtime: the moves are fixed, so store from/to squares (plus castling/capture flags) and animate pieces with transforms.
 
 ## Supporting polish (subtle, not more signatures)
 - Smooth scrolling with **Lenis** (MIT), wired to GSAP ScrollTrigger's ticker.
@@ -42,14 +56,15 @@ Plays once per session (sessionStorage). Skip entirely with `prefers-reduced-mot
 ## Rules
 - Libraries: three, @react-three/fiber, @react-three/drei, gsap (+ScrollTrigger), lenis. All MIT. Postprocessing (bloom) only if it stays above 50 fps on a mid laptop.
 - Animate transform and opacity in the DOM. WebGL uniforms are fine.
-- `prefers-reduced-motion`: no intro, no pinning, car static with damage labels shown, photo shown normally.
+- `prefers-reduced-motion`: no intro, no pinning, car static with damage labels shown, photo shown normally, chessboard on its final position.
 - Lighthouse performance 85+ on desktop, layout must not shift when the canvas loads.
-- Mobile from 375 px: car smaller and above the headline, everything readable, no horizontal scroll.
+- Mobile from 375 px: portrait above the headline, car stage full width and shorter, everything readable, no horizontal scroll.
 - Keep honesty: every label and log line describes something DriveCover actually does.
 
 ## Build order (stop after each for Adam to review in the browser)
-1. Lenis + intro sequence + heading reveals.
-2. Hero car with scan effect.
-3. Animated photo.
-4. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.
-5. Mobile, reduced motion, performance pass, then push to `main` (Vercel deploys automatically).
+1. Lenis + intro sequence + heading reveals. (done)
+2. Car with scan effect. (done, first in the hero)
+3. Change of direction: hero portrait (halftone + scan reveal + hover dots), intro ends on the reveal; car scan moves into DriveCover above Trace a claim, plays on view.
+4. Chess club signature animation (precomputed Stockfish evals).
+5. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.
+6. Mobile, reduced motion, performance pass, then push to `main` (Vercel deploys automatically).

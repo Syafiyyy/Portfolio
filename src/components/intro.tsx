@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
-import { fireCarCue } from "@/lib/intro-cue";
+import { firePortraitCue } from "@/lib/intro-cue";
 
 gsap.registerPlugin(SplitText);
 
@@ -20,22 +20,27 @@ setTimeout(function(){if(d.dataset.intro==="play")delete d.dataset.intro},4000);
 
 // Decided once per page load, so React strict mode's double effect still plays it.
 let shouldPlay: boolean | null = null;
+export function introPlaying() {
+  if (shouldPlay === null) shouldPlay = document.documentElement.dataset.intro === "play";
+  return shouldPlay;
+}
 
 /*
-  One orchestrated page load, ~1.6 s. Parts are tagged with data-intro-part="...":
+  One orchestrated page load, ~2 s. Parts are tagged with data-intro-part="...":
   1. grid      background grid fades in         0.00 – 0.50
   2. eyebrow   name line                         0.10 – 0.55
      headline  line by line, mask + translateY   0.20 – ~1.00 (120 ms stagger)
      sub       intro paragraph                   0.55 – 1.05
-  3. car       fires the car cue: the hero car rises and runs its first scan
-  4. late      nav and hero links, last          1.05 – 1.60
+  3. portrait  halftone portrait fades in        0.45 – 1.05
+     late      nav and hero links                0.85 – 1.40
+  4. reveal    fires the portrait cue: the scan line uncovers the photo (~0.9 s),
+               so the intro ends on it around 2.0 s
 */
 export function Intro() {
   useEffect(() => {
     const d = document.documentElement;
-    if (shouldPlay === null) shouldPlay = d.dataset.intro === "play";
-    if (!shouldPlay) {
-      fireCarCue();
+    if (!introPlaying()) {
+      firePortraitCue();
       return;
     }
 
@@ -70,9 +75,9 @@ export function Intro() {
           .fromTo(q("eyebrow"), { y: 8 }, { opacity: 1, y: 0, duration: 0.45 }, 0.1)
           .to(split.lines, { yPercent: 0, duration: 0.7, stagger: 0.12 }, 0.2)
           .fromTo(q("sub"), { y: 8 }, { opacity: 1, y: 0, duration: 0.5 }, 0.55)
-          .addLabel("car", 0.75)
-          .call(fireCarCue, undefined, "car")
-          .fromTo(q("late"), { y: 6 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 }, 1.05);
+          .fromTo(q("portrait"), { y: 10 }, { opacity: 1, y: 0, duration: 0.6 }, 0.45)
+          .fromTo(q("late"), { y: 6 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 }, 0.85)
+          .call(firePortraitCue, undefined, 1.1);
       });
 
       try {
@@ -80,8 +85,8 @@ export function Intro() {
       } catch {}
     });
 
-    // If the intro stalls (e.g. fonts never resolve), still let the car in.
-    const fallback = window.setTimeout(fireCarCue, 3000);
+    // If the intro stalls (e.g. fonts never resolve), still reveal the photo.
+    const fallback = window.setTimeout(firePortraitCue, 3000);
 
     return () => {
       window.clearTimeout(fallback);

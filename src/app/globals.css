@@ -97,10 +97,22 @@
   opacity: 0;
 }
 
-/* Hero car: damage label that pops beside a scanned part. */
+/* Damage scan: a pin on the part and a label beside it, placed by the scene. */
+.scan-pin {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--amber) 30%, transparent);
+}
 .scan-label {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
   white-space: nowrap;
-  transform-origin: left center;
   padding: 2px 7px;
   border: 1px solid var(--amber);
   border-radius: 3px;
@@ -111,7 +123,56 @@
   line-height: 1.5;
 }
 
-/* Hero car poster: the empty scanner bed, shown while the model loads. */
+.scan-label[data-side="right"] {
+  left: 40px;
+}
+.scan-label[data-side="left"] {
+  right: 40px;
+}
+/* Leader line from the pin to its label. */
+.scan-label::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 28px;
+  height: 1px;
+  background: var(--amber);
+}
+.scan-label[data-side="right"]::before {
+  right: 100%;
+}
+.scan-label[data-side="left"]::before {
+  left: 100%;
+}
+@media (max-width: 639px) {
+  .scan-label[data-side] {
+    left: 0;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .scan-label[data-side-narrow="above"] {
+    top: auto;
+    bottom: 26px;
+  }
+  .scan-label[data-side-narrow="below"] {
+    top: 26px;
+  }
+  .scan-label[data-side]::before {
+    left: 50%;
+    right: auto;
+    width: 1px;
+    height: 20px;
+  }
+  .scan-label[data-side-narrow="above"]::before {
+    top: 100%;
+  }
+  .scan-label[data-side-narrow="below"]::before {
+    top: auto;
+    bottom: 100%;
+  }
+}
+
+/* Damage scan placeholder: the empty scanner bed, shown while the model loads. */
 .scan-bed {
   width: 62%;
   aspect-ratio: 3 / 1;
