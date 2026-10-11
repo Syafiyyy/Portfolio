@@ -375,7 +375,6 @@
   .scan-label[data-side] {
     left: 0;
     right: auto;
-    transform: translateX(-50%);
   }
   .scan-label[data-side-narrow="above"] {
     top: auto;
@@ -396,6 +395,17 @@
   .scan-label[data-side-narrow="below"]::before {
     top: auto;
     bottom: 100%;
+  }
+  /* Centred under the pin, but kept 14px inside the panel: the scene sets
+     --x (pin to left edge) and --room (pin to right edge, minus 14px) every
+     frame. The leader line moves by the same amount so it stays on the pin
+     (both percentages are of the label's own width). */
+  .scan-label[data-side] {
+    --shift: clamp(calc(14px - var(--x, 999px)), -50%, calc(var(--room, 999px) - 100%));
+    transform: translateX(var(--shift));
+  }
+  .scan-label[data-side]::before {
+    left: calc(-1 * var(--shift));
   }
 }
 

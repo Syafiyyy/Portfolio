@@ -23,11 +23,18 @@ export function Footer() {
         <div className="text-muted">
           <p className="font-mono text-meta">credits</p>
           <p className="mt-2">
-            Car model from Kenney&apos;s{" "}
-            <TextLink href="https://kenney.nl/assets/car-kit" inline>
-              Car Kit
+            Car model:{" "}
+            <TextLink href="https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept" inline>
+              CarConcept
             </TextLink>{" "}
-            (CC0). Chess evals computed with{" "}
+            by Eric Chadwick, Khronos glTF Sample Assets,{" "}
+            <TextLink href="https://creativecommons.org/licenses/by/4.0/" inline>
+              CC BY 4.0
+            </TextLink>
+            , modified (logos removed, simplified, recoloured).
+          </p>
+          <p className="mt-2">
+            Chess evals computed with{" "}
             <TextLink href="https://stockfishchess.org" inline>
               Stockfish
             </TextLink>

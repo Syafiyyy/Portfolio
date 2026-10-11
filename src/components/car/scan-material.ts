@@ -14,26 +14,25 @@ export function createScanUniforms() {
     uCarNormal: { value: new THREE.Matrix3() }, // car → view rotation, for the dent's normals
     // The damage itself, in car space on the front faces:
     uDent: { value: new THREE.Vector4() }, // bumper dent: centre x, y, radius, depth
-    uCrack: { value: new THREE.Vector4() }, // headlamp crack: centre x, y, radius, 0
     uZoneMin: { value: Array.from({ length: MAX_ZONES }, () => new THREE.Vector3()) },
     uZoneMax: { value: Array.from({ length: MAX_ZONES }, () => new THREE.Vector3()) },
     uDamage: { value: new Array<number>(MAX_ZONES).fill(0) }, // 0..1 per zone
     uSky: { value: new THREE.Color() },
     uAmber: { value: new THREE.Color() },
-    uPaint: { value: new THREE.Color() },
   };
 }
 export type ScanUniforms = ReturnType<typeof createScanUniforms>;
 
 /*
   Patches a MeshStandardMaterial with the scanner:
-  - repaints the model's red body paint with a neutral tone (amber must stand out)
   - a thin sky-blue line where the surface crosses uScanY
   - faint horizontal contour slices just above the line, like a body scanner
   - amber glow inside each damage zone, scaled by uDamage
   - a soft sky-blue fresnel rim
-  - the damage, always there: a shallow dent in the bumper (bent normals, a
-    darker dish, light scuffs) and a short star crack in the headlamp
+  - the bumper dent, always there: bent normals, a darker dish, a crease
+    and light scratches
+  - the headlamp lights up whole in amber when the scan finds it (zone 1),
+    so the damaged part reads at a glance
   - above the line while uCloud is up, the body dims to a dark silhouette
     so the point cloud (createCloudMaterial) reads as the scanner's view
 */
@@ -69,13 +68,11 @@ uniform float uScanOn;
 uniform float uCloud;
 uniform mat3 uCarNormal;
 uniform vec4 uDent;
-uniform vec4 uCrack;
 uniform vec3 uZoneMin[${MAX_ZONES}];
 uniform vec3 uZoneMax[${MAX_ZONES}];
 uniform float uDamage[${MAX_ZONES}];
 uniform vec3 uSky;
 uniform vec3 uAmber;
-uniform vec3 uPaint;
 varying vec3 vScanWorld;
 varying vec3 vScanCar;
 varying vec3 vScanCarN;`,
@@ -83,19 +80,19 @@ varying vec3 vScanCarN;`,
       .replace(
         "#include <map_fragment>",
         /* glsl */ `#include <map_fragment>
-// Kenney's body paint is a saturated coral; swap it for a neutral tone.
-// Values are linear: paint ≈ (0.77, 0.11, 0.07); tail lamps (0.65, 0.04) stay red.
-float paintMask = smoothstep(0.66, 0.72, diffuseColor.r)
-  * smoothstep(0.06, 0.09, diffuseColor.g) * (1.0 - smoothstep(0.2, 0.3, diffuseColor.g));
-diffuseColor.rgb = mix(diffuseColor.rgb, uPaint, paintMask);
-
 float damage = 0.0;
+float lampLit = 0.0;
 for (int i = 0; i < ${MAX_ZONES}; i++) {
   vec3 outside = max(uZoneMin[i] - vScanCar, vScanCar - uZoneMax[i]);
   float edge = max(outside.x, max(outside.y, outside.z));
-  damage = max(damage, (1.0 - smoothstep(0.0, 0.05, edge)) * uDamage[i]);
+  // 2cm soft edge: tight enough for a slim headlamp strip.
+  float inZone = (1.0 - smoothstep(0.0, 0.02, edge)) * uDamage[i];
+  damage = max(damage, inZone);
+  if (i == 1) lampLit = inZone;
 }
 diffuseColor.rgb = mix(diffuseColor.rgb, uAmber, damage * 0.55);
+// The headlamp goes fully amber, not just tinted.
+diffuseColor.rgb = mix(diffuseColor.rgb, uAmber, lampLit * 0.85);
 
 // Damage only marks surfaces facing the front of the car.
 float frontFace = smoothstep(0.75, 0.95, vScanCarN.z);
@@ -115,21 +112,7 @@ diffuseColor.rgb *= (1.0 - 0.32 * dish) * (1.0 - 0.35 * crease);
 vec2 sp = (dentP / uDent.z) * mat2(0.87, -0.5, 0.5, 0.87);
 float scuffZone = frontFace * step(uZoneMin[0].z, vScanCar.z) * step(0.9, sp.x) * step(sp.x, 1.9) * step(abs(sp.y), 0.4);
 float scuff = 1.0 - smoothstep(0.0, 0.035, abs(fract(sp.y * 3.0 + 0.5) - 0.5));
-diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78), scuff * scuffZone * 0.45);
-
-// Headlamp crack: a few radial lines from an impact point plus a small
-// ring, kept short (a crack, not a smashed lamp).
-vec2 crackP = vScanCar.xy - uCrack.xy;
-float crackR = length(crackP) / uCrack.z;
-float crackA = atan(crackP.y, crackP.x) / 6.2831853;
-float spoke = abs(fract(crackA * 6.0 + 0.12 * sin(crackR * 11.0 + crackA * 19.0)) - 0.5);
-float lamp = frontFace * step(uZoneMin[1].x, vScanCar.x) * step(vScanCar.x, uZoneMax[1].x)
-  * step(uZoneMin[1].y, vScanCar.y) * step(vScanCar.y, uZoneMax[1].y) * step(uZoneMin[1].z, vScanCar.z);
-float crack = lamp * max(
-  (1.0 - smoothstep(0.0, 0.045, spoke)) * step(0.1, crackR) * (1.0 - smoothstep(0.55, 1.0, crackR)),
-  exp(-abs(crackR - 0.12) * 45.0) * step(crackR, 0.3)
-);
-diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.04), crack * 0.8);`,
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78), scuff * scuffZone * 0.45);`,
       )
       .replace(
         "#include <normal_fragment_maps>",
@@ -151,17 +134,17 @@ totalEmissiveRadiance += uSky * (scanLine * 2.2 + slice * trail * 0.35) * uScanO
 // the point cloud (diffuseColor still feeds the lighting that follows).
 diffuseColor.rgb *= 1.0 - 0.82 * step(0.0, above) * uCloud;
 
-// The amber glow holds back inside the crack and the dent so the damage
-// itself stays readable while it is highlighted.
-totalEmissiveRadiance += uAmber * damage * (0.55 + 0.25 * sin(uTime * 7.0))
-  * (1.0 - 0.9 * crack) * (1.0 - 0.5 * dish) * (1.0 - 0.4 * crease);
+// The amber glow holds back inside the dent so it stays readable while
+// highlighted; the headlamp glows on top, bright enough to read as lit.
+totalEmissiveRadiance += uAmber * damage * (0.55 + 0.25 * sin(uTime * 7.0)) * (1.0 - 0.5 * dish) * (1.0 - 0.4 * crease);
+totalEmissiveRadiance += uAmber * lampLit * (1.1 + 0.3 * sin(uTime * 7.0));
 
 float rim = pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 3.0);
 totalEmissiveRadiance += uSky * rim * 0.28;`,
       );
   };
   // Distinct program key so three doesn't reuse an unpatched program.
-  material.customProgramCacheKey = () => "car-scan-v2";
+  material.customProgramCacheKey = () => "car-scan-v3";
   material.needsUpdate = true;
 }
 

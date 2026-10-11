@@ -199,9 +199,15 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
       tiltNow.y += (tiltTo.y - tiltNow.y) * Math.min(1, dt * 10);
     };
 
+    // Only touch the DOM when something visibly moved (the idle sway is tiny).
+    let lastHang = "";
+    let lastTilt = "";
+    let lastRope = "";
     const render = () => {
-      h.style.transform = `translate3d(${p.x.toFixed(2)}px, ${p.y.toFixed(2)}px, 0) rotate(${angle.toFixed(4)}rad)`;
-      t.style.transform = `rotateX(${tiltNow.x.toFixed(2)}deg) rotateY(${tiltNow.y.toFixed(2)}deg)`;
+      const hang = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) rotate(${angle.toFixed(3)}rad)`;
+      const tl = `rotateX(${tiltNow.x.toFixed(1)}deg) rotateY(${tiltNow.y.toFixed(1)}deg)`;
+      if (hang !== lastHang) h.style.transform = lastHang = hang;
+      if (tl !== lastTilt) t.style.transform = lastTilt = tl;
       // Smooth curve through the rope points, drawn clip → anchor so the
       // printed handle reads upward, like the static strap.
       const q = [...pts].reverse();
@@ -212,7 +218,7 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
         d += ` Q${q[i].x.toFixed(1)} ${q[i].y.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;
       }
       d += ` L${q[q.length - 1].x.toFixed(1)} ${q[q.length - 1].y.toFixed(1)}`;
-      path.setAttribute("d", d);
+      if (d !== lastRope) path.setAttribute("d", (lastRope = d));
     };
 
     let raf = 0;
@@ -367,7 +373,8 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
         </text>
       </svg>
 
-      <div ref={hanger} className="relative" style={{ marginTop: "var(--strap-in)" }}>
+      {/* Own compositor layers: moving them never repaints the card. */}
+      <div ref={hanger} className="relative will-change-transform" style={{ marginTop: "var(--strap-in)" }}>
         <div aria-hidden className="badge-clip mx-auto" />
         <div
           ref={card}
@@ -380,7 +387,7 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
           }}
           className="badge-card relative -mt-2 cursor-grab touch-none select-none active:cursor-grabbing"
         >
-          <div ref={tilt} className="badge-tilt">
+          <div ref={tilt} className="badge-tilt will-change-transform">
           <div ref={flipper} className="badge-flipper relative">
             {/* Front */}
             <section
@@ -440,7 +447,12 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
             <section
               aria-label="Tech stack"
               inert={!flipped}
-              className="badge-face badge-back absolute inset-0 flex flex-col overflow-hidden rounded-xl border bg-surface shadow-[0_18px_40px_-18px_rgb(0_0_0/0.55)]"
+              // Hidden (not just turned away) until it's flipped to, so its chips
+              // rewrapping when the web font loads isn't counted as a layout shift.
+              // Hides only after the flip back has finished turning.
+              className={`badge-face badge-back absolute inset-0 flex flex-col overflow-hidden rounded-xl border bg-surface shadow-[0_18px_40px_-18px_rgb(0_0_0/0.55)] transition-[visibility] ${
+                flipped ? "visible" : "invisible delay-700"
+              }`}
             >
               <span aria-hidden className="badge-slot" />
               <div className="px-4 pb-2 pt-6 font-mono text-[11px] text-muted">

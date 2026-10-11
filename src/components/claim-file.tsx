@@ -174,7 +174,7 @@ export function ClaimFile() {
                         height={700}
                         loading="lazy"
                         decoding="async"
-                        className="size-full scale-[2.1] object-cover object-[48%_58%]"
+                        className="size-full scale-[1.9] object-cover object-[50%_64%]"
                       />
                     </span>
                   )}

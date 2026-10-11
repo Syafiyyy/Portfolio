@@ -10,8 +10,8 @@ import type { SceneColors } from "./car-scene";
 const CarScene = dynamic(() => import("./car-scene"), { ssr: false });
 
 const COLORS: Record<"dark" | "light", SceneColors> = {
-  dark: { sky: "#38bdf8", amber: "#f5a524", paint: "#c9d2de" },
-  light: { sky: "#0369a1", amber: "#d97706", paint: "#e4e9f0" },
+  dark: { sky: "#38bdf8", amber: "#f5a524", theme: "dark" },
+  light: { sky: "#0369a1", amber: "#d97706", theme: "light" },
 };
 
 // Where each label sits relative to its pin, so text stays off the car body.

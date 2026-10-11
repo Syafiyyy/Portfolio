@@ -7,30 +7,52 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { SCAN } from "@/data/site";
 import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { applyScan, createCloudMaterial, createScanPlaneMaterial, createScanUniforms, MAX_ZONES, type ScanUniforms } from "./scan-material";
 
-const MODEL = "/models/car.glb";
+type Part = (typeof SCAN.parts)[number]["part"];
+type Zone = { min: THREE.Vector3Tuple; max: THREE.Vector3Tuple; label: THREE.Vector3Tuple };
 
 /*
-  Damage zones in car space (Kenney sedan: front is +Z, 2.55 long, 1.3 tall).
-  Boxes were measured from the model's texture regions: the grey front bumper
-  and the yellow right-hand headlamp. `label` is where each label is pinned.
+  The car's profile. The model is normalised to a fixed frame: front is +Z,
+  2.55 long, wheels on y = 0.
+    zones   damage boxes in car space (front bumper, right-hand headlamp);
+            `label` is where each label is pinned. The shader takes zone 0
+            as the bumper and zone 1 as the headlamp (SCAN.parts order)
+    dent    the bumper dent, on its front face, kept to what the label
+            says: moderate
+    top     where the scan plane starts, just above the roof
+    env     studio reflections for the metallic paint (three's procedural
+            RoomEnvironment, nothing downloaded), per theme
 */
-const ZONES: Record<(typeof SCAN.parts)[number]["part"], { min: THREE.Vector3Tuple; max: THREE.Vector3Tuple; label: THREE.Vector3Tuple }> = {
-  bumper: { min: [-0.72, 0.15, 1.05], max: [0.72, 0.47, 1.34], label: [-0.55, 0.3, 1.3] },
-  headlamp: { min: [0.26, 0.56, 0.98], max: [0.7, 0.78, 1.3], label: [0.5, 0.67, 1.2] },
+type Profile = {
+  src: string;
+  zones: Record<Part, Zone>;
+  dent: { x: number; y: number; radius: number; depth: number };
+  camera: THREE.Vector3Tuple;
+  target: THREE.Vector3Tuple;
+  top: number;
+  env: { dark: number; light: number };
 };
+// "Car Concept" by Eric Chadwick, Khronos glTF Sample Assets (CC BY 4.0),
+// modified: logos removed, simplified, recoloured (see README). 0.67 tall.
+// Boxes from its meshes: BodyPanelsColor2's front, BodyHeadlights' right half.
+const P: Profile = {
+  src: "/models/car.glb",
+  zones: {
+    bumper: { min: [-0.56, 0.04, 1.14], max: [0.56, 0.2, 1.3], label: [-0.42, 0.12, 1.25] },
+    headlamp: { min: [0.17, 0.345, 1.08], max: [0.48, 0.415, 1.2], label: [0.33, 0.38, 1.17] },
+  },
+  dent: { x: -0.3, y: 0.12, radius: 0.09, depth: 0.06 },
+  camera: [2.9, 1.15, 3.2],
+  target: [0, 0.3, 0],
+  top: 0.85,
+  env: { dark: 0.55, light: 0.8 },
+};
+const MODEL = P.src;
+const ZONES = P.zones;
+const DENT = P.dent;
 export const PARTS = SCAN.parts.slice(0, MAX_ZONES);
-
-/*
-  The damage drawn on the car, kept to what the labels say: moderate. A
-  shallow dent in the bumper (a dish about a tenth of the bumper's width)
-  and a short crack across the headlamp. Car space, on the front faces;
-  the shader takes zone 0 as the bumper and zone 1 as the headlamp, the
-  order of SCAN.parts.
-*/
-const DENT = { x: -0.32, y: 0.3, radius: 0.14, depth: 0.075 };
-const CRACK = { x: 0.46, y: 0.67, radius: 0.15 };
 
 // Scan cycle, seconds.
 const SWEEP = 1.8; // plane travels top → bottom
@@ -38,7 +60,7 @@ const CLOUD_OUT = 0.7; // point cloud resolves back into the solid car
 const HOLD_UNTIL = 4.3; // damage stays lit until here
 const FADE = 0.5;
 const CYCLE = 5.6;
-const TOP = 1.45;
+const TOP = P.top;
 const BOTTOM = -0.05;
 const sweepEase = gsap.parseEase("power1.inOut");
 
@@ -50,16 +72,15 @@ PARTS.forEach((p, i) => {
   uniforms.uZoneMax.value[i].fromArray(ZONES[p.part].max);
 });
 uniforms.uDent.value.set(DENT.x, DENT.y, DENT.radius, DENT.depth);
-uniforms.uCrack.value.set(CRACK.x, CRACK.y, CRACK.radius, 0);
 const carView = new THREE.Matrix4();
 const toCam = new THREE.Vector3();
 const front = new THREE.Vector3();
 const anchor = new THREE.Vector3();
 
-const CAMERA: THREE.Vector3Tuple = [3.4, 1.75, 3.7];
-const TARGET: THREE.Vector3Tuple = [0, 0.55, 0];
+const CAMERA = P.camera;
+const TARGET = P.target;
 
-export type SceneColors = { sky: string; amber: string; paint: string };
+export type SceneColors = { sky: string; amber: string; theme: "dark" | "light" };
 
 type Props = {
   colors: SceneColors;
@@ -134,22 +155,47 @@ function Car({
   const state = useRef({ rise: reduced ? 1 : 0, scanClock: -1, readySent: false, scanned: false });
 
 
-  // One patched material shared by every mesh on the car.
+  // Every material on the car gets the scan patch (one clone each, shared
+  // by the meshes that use it).
   const model = useMemo(() => {
     const car = scene.clone(true);
-    let shared: THREE.MeshStandardMaterial | null = null;
+    const patched = new Map<THREE.Material, THREE.MeshStandardMaterial>();
     car.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
-      if (!shared) {
-        shared = (o.material as THREE.MeshStandardMaterial).clone();
-        applyScan(shared, uniforms);
+      const src = o.material as THREE.MeshStandardMaterial;
+      let m = patched.get(src);
+      if (!m) {
+        m = src.clone();
+        applyScan(m, uniforms);
+        patched.set(src, m);
       }
-      o.material = shared;
+      o.material = m;
     });
     return car;
   }, [scene]);
 
   const planeMaterial = useMemo(() => createScanPlaneMaterial(uniforms), []);
+
+  // Studio reflections for the metallic paint (see Profile.env): built once,
+  // its strength follows the theme.
+  const getThree = useThree((s) => s.get);
+  useEffect(() => {
+    const { gl, scene: threeScene } = getThree();
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const env = pmrem.fromScene(room, 0.04).texture;
+    threeScene.environment = env;
+    return () => {
+      threeScene.environment = null;
+      env.dispose();
+      room.dispose();
+      pmrem.dispose();
+    };
+  }, [getThree]);
+  useEffect(() => {
+    getThree().scene.environmentIntensity = P.env[colors.theme];
+    invalidate();
+  }, [colors.theme, getThree, invalidate]);
 
   // The point cloud: points spread over the car's surface by area, nudged
   // out along the normal so they sit just on top of it. None for reduced
@@ -199,7 +245,6 @@ function Car({
   useEffect(() => {
     uniforms.uSky.value.set(colors.sky);
     uniforms.uAmber.value.set(colors.amber);
-    uniforms.uPaint.value.set(colors.paint);
     invalidate();
   }, [colors, invalidate]);
 
@@ -264,6 +309,9 @@ function Car({
       const y = ((1 - anchor.y) / 2) * size.height;
       const lift = (1 - uniforms.uDamage.value[i]) * 4;
       l.style.transform = `translate(${x.toFixed(1)}px, ${(y + lift).toFixed(1)}px)`;
+      // Room either side of the pin, so narrow-screen labels stay inside.
+      l.style.setProperty("--x", `${x.toFixed(0)}px`);
+      l.style.setProperty("--room", `${(size.width - x - 14).toFixed(0)}px`);
       l.style.opacity = (uniforms.uDamage.value[i] * facing).toFixed(3);
     });
 
