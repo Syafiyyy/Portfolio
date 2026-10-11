@@ -1,5 +1,5 @@
 import { Trace } from "@/components/trace";
-import { CopyEmail } from "@/components/copy-email";
+import { Contact } from "@/components/contact";
 import { Heading } from "@/components/heading";
 import { Portrait } from "@/components/portrait";
 import { DamageScan } from "@/components/car/damage-scan";
@@ -10,7 +10,7 @@ import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
   return (
-    <main id="top" className="pb-24">
+    <main id="top">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div aria-hidden data-intro-part="grid" className="hero-grid pointer-events-none absolute inset-0" />
@@ -133,19 +133,11 @@ export default function Page() {
 
       {/* Contact */}
       <section className="border-t">
-        <div className="mx-auto max-w-5xl px-5 py-20">
+        <div className="mx-auto max-w-5xl px-5 pb-28 pt-20">
           <Heading id="contact">Contact</Heading>
           <p className="mt-4 max-w-[60ch] leading-relaxed text-muted">{SITE.openTo} Email is the fastest way to reach me.</p>
-          <div className="mt-6">
-            <CopyEmail email={SITE.email} />
-          </div>
-          <div className="mt-6 flex gap-6 text-sm font-medium">
-            <a href={SITE.links.github} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
-              GitHub
-            </a>
-            <a href={SITE.links.linkedin} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
-              LinkedIn
-            </a>
+          <div className="mt-12">
+            <Contact />
           </div>
         </div>
       </section>

@@ -220,3 +220,61 @@
   background: color-mix(in srgb, var(--amber) 8%, var(--surface));
   transform: rotate(-8deg);
 }
+
+/* Contact finale: the email just under the hero headline's size (3.4rem on
+   desktop), always on one line. The address is ~11.8em wide in Plex Sans
+   semibold, so 12.4 leaves a small margin at any phone width. */
+.contact-email {
+  font-size: min(3.25rem, calc((100vw - 2.5rem) / 12.4));
+  white-space: nowrap;
+}
+/* Hover/focus: an outer mask slides in from the left while the sky copy
+   inside slides back by the same amount, so the copy stays put and is
+   revealed behind the scan line (its right edge). */
+.contact-email-mask,
+.contact-email-copy {
+  transition: transform 650ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.contact-email-mask {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateX(-101%);
+}
+.contact-email-copy {
+  display: block;
+  color: var(--sky);
+  transform: translateX(101%);
+}
+.contact-email-line {
+  position: absolute;
+  top: -6%;
+  bottom: -6%;
+  right: 0;
+  width: 2px;
+  background: var(--sky);
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--sky) 55%, transparent);
+  /* Hidden at rest: parked at the mask's edge it would sit beside the text. */
+  opacity: 0;
+}
+.contact-email:hover .contact-email-mask,
+.contact-email:hover .contact-email-copy,
+.contact-email:focus-visible .contact-email-mask,
+.contact-email:focus-visible .contact-email-copy {
+  transform: none;
+}
+/* The line shows only while it sweeps, then fades as the sweep lands. */
+.contact-email:hover .contact-email-line,
+.contact-email:focus-visible .contact-email-line {
+  animation: contact-scan 750ms ease-out forwards;
+}
+@keyframes contact-scan {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
