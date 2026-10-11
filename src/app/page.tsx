@@ -1,0 +1,136 @@
+import { Trace } from "@/components/trace";
+import { CopyEmail } from "@/components/copy-email";
+import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
+
+function Heading({ children, id }: { children: React.ReactNode; id?: string }) {
+  return (
+    <h2 id={id} className="scroll-mt-20 text-2xl font-semibold tracking-tight">
+      {children}
+    </h2>
+  );
+}
+
+export default function Page() {
+  return (
+    <main id="top" className="pb-24">
+      {/* Hero */}
+      <section className="mx-auto max-w-5xl px-5 pb-20 pt-20 sm:pt-28">
+        <div className="enter max-w-3xl">
+          <p className="text-muted">
+            {SITE.name}, {SITE.location}
+          </p>
+          <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+            {SITE.headline}
+          </h1>
+          <p className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>
+          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
+            <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
+              See how a claim moves through DriveCover
+            </a>
+            <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+              Download resume
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* DriveCover */}
+      <section className="border-t">
+        <div className="mx-auto max-w-5xl px-5 py-20">
+          <div className="max-w-2xl">
+            <Heading id="drivecover">DriveCover</Heading>
+            <p className="mt-4 leading-relaxed text-muted">{DRIVECOVER.summary}</p>
+            <p className="mt-4 leading-relaxed">
+              Below is one claim, from the moment a driver reports it to the moment it is paid.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <Trace />
+          </div>
+
+          <dl className="mt-14 grid gap-px overflow-hidden rounded-md border bg-line sm:grid-cols-2 lg:grid-cols-4">
+            {DRIVECOVER.facts.map((f) => (
+              <div key={f.label} className="bg-bg p-5">
+                <dt className="sr-only">{f.label}</dt>
+                <dd className="font-mono text-2xl">{f.value}</dd>
+                <dd className="mt-1 text-sm leading-snug text-muted">{f.label}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <p className="text-muted">Built with {DRIVECOVER.stack.join(", ")}.</p>
+            <a href={DRIVECOVER.repo} target="_blank" rel="noopener noreferrer" className="font-medium text-sky underline-offset-4 hover:underline">
+              View the code on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Projects */}
+      <section className="border-t">
+        <div className="mx-auto max-w-5xl px-5 py-20">
+          <Heading id="projects">Other projects</Heading>
+          <ul className="mt-8 divide-y border-y">
+            {PROJECTS.map((p) => (
+              <li key={p.name} className="grid gap-2 py-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
+                <div>
+                  <p className="font-medium">{p.name}</p>
+                  <p className="text-sm text-muted">{p.period}</p>
+                </div>
+                <div>
+                  <p className="max-w-[65ch] leading-relaxed text-muted">{p.description}</p>
+                  <p className="mt-2 text-sm">{p.stack.join(", ")}</p>
+                  {p.href && (
+                    <a href={p.href} className="mt-2 inline-block text-sm font-medium text-sky underline-offset-4 hover:underline">
+                      View project
+                    </a>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Education */}
+      <section className="border-t">
+        <div className="mx-auto max-w-5xl px-5 py-20">
+          <Heading id="education">Education</Heading>
+          <ul className="mt-8 divide-y border-y">
+            {EDUCATION.map((e) => (
+              <li key={e.degree} className="grid gap-2 py-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
+                <p className="text-sm text-muted sm:pt-0.5">{e.period}</p>
+                <div>
+                  <p className="font-medium">{e.degree}</p>
+                  <p className="text-muted">{e.school}</p>
+                  {e.note && <p className="mt-1 text-sm">{e.note}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="border-t">
+        <div className="mx-auto max-w-5xl px-5 py-20">
+          <Heading id="contact">Contact</Heading>
+          <p className="mt-4 max-w-[60ch] leading-relaxed text-muted">{SITE.openTo} Email is the fastest way to reach me.</p>
+          <div className="mt-6">
+            <CopyEmail email={SITE.email} />
+          </div>
+          <div className="mt-6 flex gap-6 text-sm font-medium">
+            <a href={SITE.links.github} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+              GitHub
+            </a>
+            <a href={SITE.links.linkedin} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

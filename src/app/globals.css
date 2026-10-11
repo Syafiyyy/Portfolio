@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Palette
+  ink    #0b1220  page background (dark)
+  paper  #f5f7fa  page background (light)
+  sky    #38bdf8  links, active system node
+  amber  #f5a524  the claim travelling through the system; used nowhere else
+  slate  #8a97ab  secondary text
+  line   #1d2738  hairlines and inactive nodes
+*/
+:root {
+  --bg: #f5f7fa;
+  --fg: #0b1220;
+  --muted: #4f5d73;
+  --line: #d6dde8;
+  --surface: #ffffff;
+  --sky: #0369a1;
+  --amber: #b45309;
+  --amber-soft: #fde9c8;
+}
+
+.dark {
+  --bg: #0b1220;
+  --fg: #e8edf5;
+  --muted: #8a97ab;
+  --line: #1d2738;
+  --surface: #0f1729;
+  --sky: #38bdf8;
+  --amber: #f5a524;
+  --amber-soft: #3a2a10;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-surface: var(--surface);
+  --color-sky: var(--sky);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--amber-soft);
+  }
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+/* One page-load fade for the hero, 300ms, opacity + small translate only. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.enter {
+  animation: enter 300ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
