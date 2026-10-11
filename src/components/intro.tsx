@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import gsap from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { fireCarCue } from "@/lib/intro-cue";
 
 gsap.registerPlugin(SplitText);
 
@@ -21,19 +22,22 @@ setTimeout(function(){if(d.dataset.intro==="play")delete d.dataset.intro},4000);
 let shouldPlay: boolean | null = null;
 
 /*
-  One orchestrated page load, ~1.6 s. Parts are tagged with data-intro="...":
+  One orchestrated page load, ~1.6 s. Parts are tagged with data-intro-part="...":
   1. grid      background grid fades in         0.00 – 0.50
   2. eyebrow   name line                         0.10 – 0.55
      headline  line by line, mask + translateY   0.20 – ~1.00 (120 ms stagger)
      sub       intro paragraph                   0.55 – 1.05
-  3. "car"     label where step 2 adds the car rising + first scan
+  3. car       fires the car cue: the hero car rises and runs its first scan
   4. late      nav and hero links, last          1.05 – 1.60
 */
 export function Intro() {
   useEffect(() => {
     const d = document.documentElement;
     if (shouldPlay === null) shouldPlay = d.dataset.intro === "play";
-    if (!shouldPlay) return;
+    if (!shouldPlay) {
+      fireCarCue();
+      return;
+    }
 
     let cancelled = false;
     let split: SplitText | undefined;
@@ -67,6 +71,7 @@ export function Intro() {
           .to(split.lines, { yPercent: 0, duration: 0.7, stagger: 0.12 }, 0.2)
           .fromTo(q("sub"), { y: 8 }, { opacity: 1, y: 0, duration: 0.5 }, 0.55)
           .addLabel("car", 0.75)
+          .call(fireCarCue, undefined, "car")
           .fromTo(q("late"), { y: 6 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 }, 1.05);
       });
 
@@ -75,7 +80,11 @@ export function Intro() {
       } catch {}
     });
 
+    // If the intro stalls (e.g. fonts never resolve), still let the car in.
+    const fallback = window.setTimeout(fireCarCue, 3000);
+
     return () => {
+      window.clearTimeout(fallback);
       cancelled = true;
       ctx?.revert();
       split?.revert();

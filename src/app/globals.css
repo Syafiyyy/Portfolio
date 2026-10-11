@@ -96,3 +96,26 @@
 [data-intro="play"] [data-intro-part] {
   opacity: 0;
 }
+
+/* Hero car: damage label that pops beside a scanned part. */
+.scan-label {
+  white-space: nowrap;
+  transform-origin: left center;
+  padding: 2px 7px;
+  border: 1px solid var(--amber);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* Hero car poster: the empty scanner bed, shown while the model loads. */
+.scan-bed {
+  width: 62%;
+  aspect-ratio: 3 / 1;
+  border: 1px solid color-mix(in srgb, var(--sky) 45%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--sky) 10%, transparent), transparent);
+}

@@ -1,6 +1,7 @@
 import { Trace } from "@/components/trace";
 import { CopyEmail } from "@/components/copy-email";
 import { Heading } from "@/components/heading";
+import { HeroCar } from "@/components/car/hero-car";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -9,8 +10,12 @@ export default function Page() {
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div aria-hidden data-intro-part="grid" className="hero-grid pointer-events-none absolute inset-0" />
-        <div className="relative mx-auto max-w-5xl px-5 pb-20 pt-20 sm:pt-28">
-          <div className="max-w-3xl">
+        <div className="relative mx-auto grid max-w-5xl items-center gap-6 px-5 pb-20 pt-8 sm:pt-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-4 lg:pt-16">
+          {/* Car sits above the headline on small screens, right of it on large. */}
+          <div data-intro-part="grid" className="mx-auto w-full max-w-md lg:order-2 lg:max-w-none">
+            <HeroCar />
+          </div>
+          <div className="max-w-3xl lg:order-1">
             <div data-intro-part="eyebrow" className="flex items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -24,7 +29,7 @@ export default function Page() {
                 {SITE.name}, {SITE.location}
               </p>
             </div>
-            <h1 data-intro-part="headline" className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+            <h1 data-intro-part="headline" className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl lg:text-[3.4rem]">
               {SITE.headline}
             </h1>
             <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>

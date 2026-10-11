@@ -62,6 +62,15 @@ export const TRACE = [
   },
 ];
 
+// Hero car scan labels. Mirrors the gemini.assess line above: same parts,
+// same severity. Only parts the scene has a zone for can be listed.
+export const SCAN = {
+  parts: [
+    { part: "bumper", severity: "moderate" },
+    { part: "headlamp", severity: "moderate" },
+  ],
+} as const;
+
 export const PROJECTS = [
   {
     name: "Chess club app",
