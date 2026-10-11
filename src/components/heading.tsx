@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 // Section heading: a lowercase mono path kicker ("~/work/drivecover") over a
 // heading-tier title that slides up out of a mask the first time it enters
 // view, while a scan line crosses it (the site's scan language) and fades.
-export function Heading({ children, id, kicker }: { children: React.ReactNode; id?: string; kicker: string }) {
+export function Heading({ children, kicker }: { children: React.ReactNode; kicker: string }) {
   const inner = useRef<HTMLSpanElement>(null);
   const text = useRef<HTMLSpanElement>(null);
   const line = useRef<HTMLSpanElement>(null);
@@ -41,8 +41,7 @@ export function Heading({ children, id, kicker }: { children: React.ReactNode; i
   }, []);
 
   return (
-    // The id sits on the wrapper so jumping to a section shows the kicker too.
-    <div id={id} className="scroll-mt-20">
+    <div>
       <p className="font-mono text-meta text-muted">
         <span className="text-sky">~</span>
         {kicker.replace(/^~/, "")}

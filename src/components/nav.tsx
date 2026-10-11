@@ -116,7 +116,7 @@ export function Nav() {
     <>
     <header ref={header} data-intro-part="late" className="pointer-events-none sticky top-0 z-20">
       <div className="nav-shell pointer-events-auto relative border-b bg-bg/90 backdrop-blur-sm">
-        <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-5 text-sm">
+        <nav className="frame flex h-14 items-center justify-between gap-4 text-sm">
           <div className="flex min-w-0 items-baseline gap-3">
             <a href="#top" className="shrink-0 font-medium">
               {SITE.name}
