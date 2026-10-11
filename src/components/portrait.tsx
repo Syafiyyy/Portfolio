@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { SITE } from "@/data/site";
-import { introPlaying } from "@/components/intro";
+import { introMode } from "@/components/intro";
 import { onPortraitCue } from "@/lib/intro-cue";
 
 const CELL = 6; // halftone cell, CSS px
@@ -11,6 +11,8 @@ const HOVER_RADIUS = 38; // CSS px
 const SETTLE = 0.22; // s, time constant for hover dots to fade back out
 const REVEAL = 0.95; // s, scan line top → bottom
 const BAND = 26; // CSS px of soft edge above the scan line
+const OVERLAY_FADE = 450; // ms, phones: halftone fades in over the photo
+const OVERLAY_HOLD = 350; // ms, then holds before the scan line reveals
 const revealEase = gsap.parseEase("power2.inOut");
 
 /*
@@ -36,10 +38,15 @@ export function Portrait() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = cv.getContext("2d");
     if (!ctx) return;
-    const intro = introPlaying();
-    // During the intro the wrapper is still invisible here; keep the bare
-    // photo hidden until the halftone has been drawn over it.
-    if (intro) photo.style.visibility = "hidden";
+    const mode = introMode();
+    const intro = mode !== "none";
+    // Full intro: the wrapper is still invisible here; keep the bare photo
+    // hidden until the halftone has been drawn over it.
+    if (mode === "full") photo.style.visibility = "hidden";
+    // Overlay (phones): the photo has been on screen since first paint. The
+    // halftone fades in on top of it, then the scan line reveals it again.
+    if (mode === "overlay") cv.style.opacity = "0";
+    let overlayTimer = 0;
 
     let w = 0;
     let h = 0;
@@ -190,8 +197,10 @@ export function Portrait() {
       start();
     };
 
+    // The full intro decides when to reveal; the overlay times itself.
     let cued = false;
     const offCue = onPortraitCue(() => {
+      if (mode === "overlay") return;
       cued = true;
       reveal();
     });
@@ -204,6 +213,11 @@ export function Portrait() {
       draw();
       // The halftone now covers the photo, so the photo can be shown under it.
       photo.style.visibility = "";
+      if (mode === "overlay") {
+        cv.style.transition = `opacity ${OVERLAY_FADE}ms ease-out`;
+        requestAnimationFrame(() => (cv.style.opacity = "1"));
+        overlayTimer = window.setTimeout(reveal, OVERLAY_FADE + OVERLAY_HOLD);
+      }
       if (cued) reveal();
     };
     if (photo.complete && photo.naturalWidth) init();
@@ -241,7 +255,10 @@ export function Portrait() {
       cancelAnimationFrame(raf);
       offCue();
       tween?.kill();
+      window.clearTimeout(overlayTimer);
       photo.style.visibility = "";
+      cv.style.opacity = "";
+      cv.style.transition = "";
       photo.removeEventListener("load", init);
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", onLeave);

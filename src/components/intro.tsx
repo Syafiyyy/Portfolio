@@ -9,27 +9,38 @@ gsap.registerPlugin(SplitText);
 
 const KEY = "intro-played";
 
-// Runs before first paint (inlined in <head>). Marks the page so CSS hides the
-// intro pieces until GSAP takes over. If the app hasn't claimed the intro
-// ("play" -> "claimed") within 1.5 s, e.g. on a slow phone, the intro is
-// skipped and the page shows at once rather than staying blank.
+// Shared with the boot script and CSS: phones get the overlay intro.
+export const PHONE = "(max-width: 767px)";
+
+/*
+  Runs before first paint (inlined in <head>) and picks the intro:
+  - "play" (larger screens): CSS hides the intro pieces until GSAP takes over.
+    If the app hasn't claimed it ("claimed") within 1.5 s, it is skipped and
+    the page shows at once rather than staying blank.
+  - "overlay" (phones): nothing is hidden. The page, portrait included, paints
+    straight away; after hydration the halftone fades in over the photo and
+    the scan line reveals it again.
+*/
 export const INTRO_BOOT = `(function(){try{
 var d=document.documentElement;
 if(sessionStorage.getItem("${KEY}")||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+if(matchMedia("${PHONE}").matches){d.dataset.intro="overlay";return}
 d.dataset.intro="play";
 setTimeout(function(){if(d.dataset.intro==="play")delete d.dataset.intro},1500);
 }catch(e){}})();`;
 
+export type IntroMode = "full" | "overlay" | "none";
+
 // Decided once per page load, so React strict mode's double effect still plays it.
-let shouldPlay: boolean | null = null;
-export function introPlaying() {
-  if (shouldPlay === null) {
+let mode: IntroMode | null = null;
+export function introMode(): IntroMode {
+  if (mode === null) {
     const d = document.documentElement;
-    shouldPlay = d.dataset.intro === "play";
+    mode = d.dataset.intro === "play" ? "full" : d.dataset.intro === "overlay" ? "overlay" : "none";
     // Claim it so the boot script's deadline no longer applies.
-    if (shouldPlay) d.dataset.intro = "claimed";
+    if (mode === "full") d.dataset.intro = "claimed";
   }
-  return shouldPlay;
+  return mode;
 }
 
 /*
@@ -46,7 +57,15 @@ export function introPlaying() {
 export function Intro() {
   useEffect(() => {
     const d = document.documentElement;
-    if (!introPlaying()) {
+    const m = introMode();
+    if (m !== "full") {
+      // Overlay (phones): the portrait runs its own fade-in + reveal.
+      if (m === "overlay") {
+        delete d.dataset.intro;
+        try {
+          sessionStorage.setItem(KEY, "1");
+        } catch {}
+      }
       firePortraitCue();
       return;
     }
