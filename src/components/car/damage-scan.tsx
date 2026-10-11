@@ -84,11 +84,17 @@ export function DamageScan() {
       },
       { threshold: 0.45 },
     );
-    near.observe(el);
+    // On short screens the panel starts within that 600px margin, which would
+    // pull three.js in during page load. So arm it on the first scroll,
+    // unless the panel is already on screen.
+    const armNear = () => near.observe(el);
+    if (el.getBoundingClientRect().top < window.innerHeight) armNear();
+    else window.addEventListener("scroll", armNear, { once: true, passive: true });
     onScreen.observe(el);
     inView.observe(el);
     return () => {
       if (idle) window.cancelIdleCallback(idle);
+      window.removeEventListener("scroll", armNear);
       near.disconnect();
       onScreen.disconnect();
       inView.disconnect();
