@@ -41,3 +41,6 @@ next-env.d.ts
 
 # Raw source assets (converted copies live in public/)
 /assets-src/
+
+# Personal files kept next to the repo, never committed (e.g. resume .docx)
+/private/
