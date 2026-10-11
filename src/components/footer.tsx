@@ -15,6 +15,9 @@ export function Footer() {
           <p className="mt-4 font-mono text-xs text-muted">
             last claim <span className="text-fg">{CLAIM_REF}</span> · <span className="text-amber">settled</span>
           </p>
+          <p className="mt-1 font-mono text-xs text-muted">
+            now: <span className="text-fg">{SITE.now}</span>
+          </p>
         </div>
         <div className="text-muted">
           <p className="font-mono text-meta">built with</p>

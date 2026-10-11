@@ -25,7 +25,7 @@ type Item = {
   keywords?: string;
   section?: string;
   href?: string;
-  action?: "copy" | "theme";
+  action?: "copy" | "theme" | "hire";
 };
 
 const OUT_MS = 220;
@@ -58,14 +58,19 @@ export default function CommandMenu({
       { id: "top", group: "go to", label: "Start of the page", hint: "~/", section: "top", keywords: "home hero top" },
       { id: "drivecover", group: "go to", label: "DriveCover", hint: "~/work/drivecover", section: "drivecover", keywords: "work claim" },
       { id: "projects", group: "go to", label: "Other projects", hint: "~/projects", section: "projects", keywords: "chess" },
+      { id: "stack", group: "go to", label: "Stack", hint: "~/stack", section: "stack", keywords: "tools tech skills" },
       { id: "education", group: "go to", label: "Education", hint: "~/education", section: "education", keywords: "degree school" },
-      { id: "contact", group: "go to", label: "Contact", hint: "~/contact", section: "contact", keywords: "email hire" },
+      { id: "contact", group: "go to", label: "Contact", hint: "~/contact", section: "contact", keywords: "email reach" },
+      { id: "hire", group: "actions", label: "Hire Adam", hint: "email", action: "hire", keywords: "hire internship freelance job work" },
       { id: "copy", group: "actions", label: copied ? "Copied" : "Copy email", hint: copied ? "201 · copied to clipboard" : SITE.email, action: "copy", keywords: "mail" },
       { id: "theme", group: "actions", label: `Switch to ${isDark ? "light" : "dark"} mode`, hint: "theme", action: "theme", keywords: "dark light theme" },
       { id: "github", group: "links", label: "GitHub", hint: SITE.links.github.replace(/^https:\/\//, ""), href: SITE.links.github, keywords: "code" },
       { id: "linkedin", group: "links", label: "LinkedIn", hint: SITE.links.linkedin.replace(/^https:\/\/(www\.)?/, ""), href: SITE.links.linkedin },
       { id: "resume", group: "links", label: "Resume", hint: "pdf", href: SITE.resume, keywords: "cv" },
-      { id: "repo", group: "links", label: "DriveCover code", hint: DRIVECOVER.repo.replace(/^https:\/\//, ""), href: DRIVECOVER.repo, keywords: "github source" },
+      // Only while the DriveCover repo is public (see DRIVECOVER.repo).
+      ...(DRIVECOVER.repo
+        ? [{ id: "repo", group: "links" as const, label: "DriveCover code", hint: DRIVECOVER.repo.replace(/^https:\/\//, ""), href: DRIVECOVER.repo, keywords: "github source" }]
+        : []),
     ],
     [copied, isDark],
   );
@@ -128,6 +133,20 @@ export default function CommandMenu({
           window.setTimeout(() => close(), 900);
         })
         .catch(() => close(() => (window.location.href = `mailto:${SITE.email}`)));
+    } else if (it.action === "hire") {
+      // A prefilled enquiry in the visitor's mail app.
+      const subject = "Internship / freelance enquiry";
+      const body = [
+        "Hi Adam,",
+        "",
+        "I came across your portfolio and would like to talk about an internship / freelance role.",
+        "",
+        "Role:",
+        "Timeline:",
+        "",
+        "Thanks,",
+      ].join("\n");
+      close(() => (window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`));
     } else if (it.action === "theme") {
       close(() => {
         const t = document.querySelector("[data-theme-toggle]")?.getBoundingClientRect();

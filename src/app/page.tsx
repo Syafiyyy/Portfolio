@@ -8,6 +8,8 @@ import { CountUp } from "@/components/count-up";
 import { Magnetic } from "@/components/magnetic";
 import { TextLink } from "@/components/text-link";
 import { SectionFrame } from "@/components/section-frame";
+import { StackExplorer } from "@/components/stack/stack-explorer";
+import { stackIcons } from "@/components/stack/stack-icons";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -76,9 +78,15 @@ export default function Page() {
 
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <p className="text-muted">Built with {DRIVECOVER.stack.join(", ")}.</p>
-          <TextLink href={DRIVECOVER.repo} tone="sky" className="font-medium">
-            View the code on GitHub
-          </TextLink>
+          {DRIVECOVER.repo ? (
+            <TextLink href={DRIVECOVER.repo} tone="sky" className="font-medium">
+              View the code on GitHub
+            </TextLink>
+          ) : (
+            <TextLink href={`mailto:${SITE.email}?subject=${encodeURIComponent("DriveCover code walkthrough")}`} tone="sky" className="font-medium">
+              Code walkthrough available on request
+            </TextLink>
+          )}
         </div>
       </SectionFrame>
 
@@ -106,6 +114,11 @@ export default function Page() {
             </li>
           ))}
         </ul>
+      </SectionFrame>
+
+      {/* Stack: tools by layer, each tied to the work it was used in. */}
+      <SectionFrame id="stack" kicker="~/stack" title="Stack">
+        <StackExplorer icons={stackIcons()} />
       </SectionFrame>
 
       {/* Education: compact rows, it is reference rather than story. */}

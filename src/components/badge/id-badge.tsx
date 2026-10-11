@@ -458,13 +458,13 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
               <div className="px-4 pb-2 pt-6 font-mono text-[11px] text-muted">
                 <span className="text-sky">~</span>/stack
               </div>
-              <div className="space-y-3 px-4 pt-1 sm:space-y-4">
+              <div className="space-y-3 px-4 pt-1 lg:space-y-4">
                 {STACK.map((g) => (
                   <div key={g.group}>
                     <p className="font-mono text-meta text-muted">{g.group}</p>
                     <ul className="mt-1.5 flex flex-wrap gap-1.5">
                       {g.items.map((it) => (
-                        <li key={it} className="rounded-sm border px-2 py-px text-[13px] sm:py-0.5 sm:text-sm">
+                        <li key={it} className="rounded-sm border px-2 py-px text-[13px] lg:py-0.5 lg:text-sm">
                           {it}
                         </li>
                       ))}
@@ -472,10 +472,10 @@ export function IdBadge({ qr }: { qr: React.ReactNode }) {
                   </div>
                 ))}
               </div>
-              {/* What I'm open to and where to find me, from SITE. */}
-              <div className="mt-auto space-y-2 px-4 pb-3 pt-3">
-                {/* Not on phones: the back is shorter there, and Contact says it too. */}
-                <p className="hidden text-sm text-muted sm:block">{SITE.openTo}</p>
+              {/* What I'm open to and where to find me, from SITE. Only from lg,
+                  where the card is wider; Contact has all of it anyway. */}
+              <div className="mt-auto hidden space-y-2 px-4 pb-3 pt-3 lg:block">
+                <p className="text-sm text-muted">{SITE.openTo}</p>
                 <dl className="font-mono text-[11px] leading-relaxed">
                   <div className="flex gap-1.5">
                     <dt className="text-muted">github:</dt>

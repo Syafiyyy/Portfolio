@@ -19,6 +19,8 @@ export const SITE = {
     linkedin: "https://www.linkedin.com/in/adam-syafi-430919326",
   },
   openTo: "Open to internships, freelance work and research assistant roles.",
+  // Footer status line.
+  now: "building DriveCover · learning Docker",
 };
 
 // The developer ID badge in the hero (my own design, not a university card).
@@ -33,13 +35,50 @@ export const BADGE = {
   status: "open to work",
 };
 
-// Tech I have shipped with, grouped as on the badge's back. Every item is
-// used in a project on this site (DriveCover, the chess club app, this
-// portfolio itself) or listed on my resume (Java, JavaFX, PHP, MySQL, Laravel).
+// Evidence for the Stack section: the work each tool was used in. Projects
+// are shipped work shown on this site; coursework is from my degree and
+// shown apart, more quietly. Each links to where it can be seen.
+export type WorkId = "drivecover" | "chess" | "site" | "javafx" | "sql";
+export const WORK: { id: WorkId; name: string; kind: "project" | "coursework"; href: string }[] = [
+  { id: "drivecover", name: "DriveCover", kind: "project", href: "#drivecover" },
+  { id: "chess", name: "Chess club app", kind: "project", href: "#projects" },
+  { id: "site", name: "This site", kind: "project", href: "https://github.com/Syafiyyy/Portfolio" },
+  // No public repos for these: they point to the degree they were part of.
+  { id: "javafx", name: "JavaFX desktop app", kind: "coursework", href: "#education" },
+  { id: "sql", name: "SQL database project", kind: "coursework", href: "#education" },
+];
+
+// Tools by layer, each with the work it was used in (WORK ids). Only tools
+// with evidence above are listed. `icon` is a Simple Icons slug (null: a
+// glyph of our own). Tools used only in coursework form the coursework row.
+export type Layer = "frontend" | "backend" | "data" | "ai" | "tools" | "coursework";
+export const TOOLS: { name: string; layer: Layer; icon: string | null; used: WorkId[] }[] = [
+  { name: "Next.js", layer: "frontend", icon: "nextdotjs", used: ["site"] },
+  { name: "React", layer: "frontend", icon: "react", used: ["site"] },
+  { name: "Tailwind", layer: "frontend", icon: "tailwindcss", used: ["site"] },
+  { name: "GSAP", layer: "frontend", icon: "gsap", used: ["site"] },
+  { name: "Three.js", layer: "frontend", icon: "threedotjs", used: ["site"] },
+  { name: "Flutter", layer: "frontend", icon: "flutter", used: ["chess"] },
+  { name: "NestJS", layer: "backend", icon: "nestjs", used: ["drivecover"] },
+  { name: "Prisma", layer: "backend", icon: "prisma", used: ["drivecover"] },
+  { name: "Stripe", layer: "backend", icon: "stripe", used: ["drivecover"] },
+  { name: "PostgreSQL", layer: "data", icon: "postgresql", used: ["drivecover"] },
+  { name: "Supabase", layer: "data", icon: "supabase", used: ["drivecover"] },
+  { name: "Firebase", layer: "data", icon: "firebase", used: ["chess"] },
+  { name: "Gemini", layer: "ai", icon: "googlegemini", used: ["drivecover"] },
+  { name: "Stockfish", layer: "ai", icon: null, used: ["chess"] },
+  { name: "TypeScript", layer: "tools", icon: "typescript", used: ["drivecover"] },
+  { name: "Java", layer: "coursework", icon: "openjdk", used: ["javafx"] },
+  { name: "MySQL", layer: "coursework", icon: "mysql", used: ["sql"] },
+];
+
+// The badge's back: the same tools, folded into fewer groups to fit a card.
+const toolsIn = (...layers: Layer[]) => TOOLS.filter((t) => layers.includes(t.layer)).map((t) => t.name);
 export const STACK = [
-  { group: "frontend", items: ["Next.js", "Tailwind", "GSAP", "three.js", "Flutter", "JavaFX"] },
-  { group: "backend", items: ["NestJS", "Laravel", "PHP", "Java", "Prisma", "PostgreSQL", "MySQL", "Supabase", "Firebase", "Stripe"] },
-  { group: "ai", items: ["Gemini", "Stockfish"] },
+  { group: "frontend", items: toolsIn("frontend") },
+  { group: "backend", items: toolsIn("backend", "data", "tools") },
+  { group: "ai", items: toolsIn("ai") },
+  { group: "coursework", items: toolsIn("coursework") },
 ];
 
 export const DRIVECOVER = {
@@ -47,7 +86,10 @@ export const DRIVECOVER = {
   lead: "I build backend systems that handle real money and real claims.",
   summary:
     "A motor insurance web app for the Malaysian market. Customers get a quote, buy cover, file a claim and renew, all in one place. It is my final year project, built to the rules a real insurer has to follow.",
-  repo: "https://github.com/Syafiyyy/drivecover",
+  // The repo is private until the FYP is submitted. Set the URL here to show
+  // "View the code on GitHub" (and the ⌘K entry) again; while null, the site
+  // offers a code walkthrough by email instead.
+  repo: null as string | null,
   stack: ["NestJS", "Prisma", "PostgreSQL", "Supabase", "Stripe", "Gemini"],
   facts: [
     { value: "377", label: "automated tests on the pricing and claims engine" },
