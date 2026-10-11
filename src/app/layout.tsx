@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: `${SITE.name}, ${SITE.role.toLowerCase()}`,
   description: SITE.headline,
+  // Resolved against metadataBase, so it always follows SITE.url.
+  alternates: { canonical: "/" },
   openGraph: {
     title: SITE.name,
     description: SITE.headline,

@@ -3,7 +3,9 @@
 export const SITE = {
   name: "Adam Syafi",
   fullName: "Adam Syafi Bin Abdul Aziz",
-  url: "https://portfolio-blond-nu-58.vercel.app",
+  // Primary address. The old portfolio-blond-nu-58.vercel.app domain stays
+  // in Vercel and redirects here, so earlier links keep working.
+  url: "https://portfolio-adamsyafi.vercel.app",
   location: "Selangor, Malaysia",
   role: "Full-stack developer",
   headline: "I design and build software, end to end.",
