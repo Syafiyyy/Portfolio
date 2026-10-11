@@ -17,6 +17,7 @@ export function TextLink({
   arrow,
   inline = false,
   newTab,
+  current,
   className = "",
 }: {
   href: string;
@@ -25,6 +26,8 @@ export function TextLink({
   arrow?: Arrow;
   inline?: boolean;
   newTab?: boolean;
+  // Marks the link for the section currently on screen.
+  current?: boolean;
   className?: string;
 }) {
   const external = newTab ?? /^https?:|\.pdf$/.test(href);
@@ -35,6 +38,7 @@ export function TextLink({
       {...(external && { target: "_blank", rel: "noopener noreferrer" })}
       data-tone={tone}
       data-inline={inline || undefined}
+      aria-current={current ? "location" : undefined}
       className={`link ${className}`}
     >
       <span className="link-label">{children}</span>

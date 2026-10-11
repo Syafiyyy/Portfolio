@@ -477,3 +477,56 @@
     opacity: 0;
   }
 }
+
+/*
+  Nav: scrolling down slides the bar up until only its bottom edge (the
+  claim-status progress line) is left; scrolling up, keyboard focus, or the
+  mouse at the top edge brings it back.
+*/
+.nav-shell {
+  transition: transform 450ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+[data-collapsed] .nav-shell {
+  /* 3px left showing: the 2px progress line and room for its tick dots. */
+  transform: translateY(calc(-100% + 3px));
+}
+[data-collapsed]:focus-within .nav-shell {
+  transform: none;
+}
+.nav-dot {
+  transition:
+    transform 450ms cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 250ms ease-out;
+}
+
+/* Command menu (palette and mobile sheet): see command-menu.tsx. */
+.cmdk-backdrop {
+  opacity: 0;
+  transition: opacity 220ms ease-out;
+}
+.cmdk-panel {
+  transition:
+    transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 200ms ease-out;
+}
+.cmdk[data-variant="palette"] .cmdk-panel {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+.cmdk[data-variant="sheet"] .cmdk-panel {
+  transform: translateY(100%);
+}
+.cmdk[data-state="open"] .cmdk-backdrop {
+  opacity: 1;
+}
+.cmdk[data-state="open"] .cmdk-panel {
+  opacity: 1;
+  transform: none;
+}
+.cmdk-option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--sky) 12%, transparent);
+  box-shadow: inset 2px 0 0 var(--sky);
+}
+.link[aria-current="location"] {
+  color: var(--fg);
+}
