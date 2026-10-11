@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TRACE } from "@/data/site";
-import { ClaimFile, FILE_ROWS, FILE_STATUS } from "@/components/claim-file";
+import { ClaimFile, FILE_ROWS, FILE_STATUS, odoAt } from "@/components/claim-file";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,6 +12,7 @@ gsap.registerPlugin(ScrollTrigger);
 const TRAVEL = 0.3;
 const FADE = 0.2;
 const HOLD = 0.55;
+const TYPE = 0.035; // per character of the e-invoice number
 const EASE_OUT = "power3.out";
 
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -25,6 +26,7 @@ export function Trace() {
   const logs = useRef<(HTMLLIElement | null)[]>([]);
   const done = useRef<HTMLParagraphElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
+  const resetReceipt = useRef<() => void>(() => {});
   const [played, setPlayed] = useState(false);
 
   useIsoLayoutEffect(() => {
@@ -48,8 +50,17 @@ export function Trace() {
       statuses: q("[data-file-status]"),
       ref: one("[data-file-ref]"),
       stamp: one("[data-file-stamp]"),
+      ink: one("[data-file-ink]"),
+      card: one("[data-file-card]"),
+      // Settlement receipt: odometer strips, e-invoice characters, caret.
+      strips: q("[data-odo]"),
+      chars: q("[data-inv-char]"),
+      caret: one("[data-inv-caret]"),
     };
     const STAMP_REST = { opacity: 1, scale: 1, rotation: -8 };
+    const odoFinal = (_: number, s: HTMLElement) => odoAt(Number(s.dataset.odo));
+    // The e-invoice number is monospaced, so the caret steps one character width.
+    const charW = () => file.chars[0]?.getBoundingClientRect().width ?? 0;
 
     const showFinal = () => {
       gsap.set(glows.current, { opacity: 1 });
@@ -61,19 +72,65 @@ export function Trace() {
       gsap.set(file.statuses, { opacity: (k) => (k === file.statuses.length - 1 ? 1 : 0) });
       gsap.set(file.ref, { opacity: 1 });
       gsap.set(file.stamp, STAMP_REST);
+      gsap.set(file.strips, { y: 0, yPercent: odoFinal });
+      gsap.set(file.chars, { opacity: 1 });
+      gsap.set([file.caret, file.ink], { opacity: 0 });
       setPlayed(true);
     };
 
+    /*
+      The settlement receipt plays in real time (~1.5s) rather than with the
+      scroll: the amount rolls up, the e-invoice number types out, the stamp
+      presses. The scrubbed timeline only triggers it on reaching Settlement
+      and resets it when scrolled back above.
+    */
+    const receipt = () => {
+      const r = gsap.timeline({ paused: true });
+      // Digits spin into place left to right...
+      r.to(file.strips, { yPercent: odoFinal, duration: 0.7, ease: "power3.out", stagger: 0.05 }, 0)
+        // ...the e-invoice number types out behind a caret...
+        .set(file.caret, { opacity: 1, x: 0 }, 0.45);
+      file.chars.forEach((c, m) => {
+        r.set(c, { opacity: 1 }, 0.5 + m * TYPE).set(file.caret, { x: () => charW() * (m + 1) }, 0.5 + m * TYPE);
+      });
+      // ...and the stamp presses: a little past flat, a spring back, ink
+      // spreading out under it, and the card taking the knock.
+      r.to(file.caret, { opacity: 0, duration: 0.15 }, 1.0)
+        .to(file.stamp, { opacity: 1, scale: 0.93, rotation: -8, duration: 0.14, ease: "power3.in" }, 1.0)
+        .to(file.stamp, { scale: 1, duration: 0.3, ease: "back.out(3)" }, 1.14)
+        // set + to rather than fromTo: rewound to the start, a fromTo would
+        // show its "from" state (ink visible, card down) on the blank file.
+        .set(file.ink, { opacity: 0.55, scale: 1, rotation: -8 }, 1.14)
+        .to(file.ink, { opacity: 0, scale: 1.14, duration: 0.45, ease: "power2.out" }, 1.14)
+        .set(file.card, { y: 2 }, 1.14)
+        .to(file.card, { y: 0, duration: 0.25, ease: "power2.out" }, 1.14);
+      return r;
+    };
+    // Blank receipt: RM 0,000.00, no e-invoice number, no stamp.
+    // Blank first, then rewind: if the rewind is the timeline's first render,
+    // its tweens record these blank values as their start.
+    const blankReceipt = (r: gsap.core.Timeline) => {
+      gsap.set(file.strips, { y: 0, yPercent: 0 });
+      gsap.set(file.chars, { opacity: 0 });
+      gsap.set(file.caret, { opacity: 0, x: 0 });
+      gsap.set(file.stamp, { opacity: 0, scale: 1.35, rotation: -13 });
+      gsap.set(file.ink, { opacity: 0 });
+      gsap.set(file.card, { y: 0 });
+      r.pause(0);
+    };
+
     const build = () => {
+      const rc = receipt();
+      blankReceipt(rc);
+      resetReceipt.current = () => blankReceipt(rc);
       const t = gsap.timeline({ paused: true, onComplete: () => setPlayed(true) });
       t.set(glows.current, { opacity: 0 })
         .set(logs.current, { opacity: 0, y: 4 })
         .set(done.current, { opacity: 0 })
-        // The claim file starts blank: placeholder bars, no status, no stamp.
+        // The claim file starts blank: placeholder bars, no status.
         .set(file.values, { opacity: 0, yPercent: 110 })
         .set(file.skeletons, { opacity: 1 })
         .set([...file.flashes, ...file.statuses, file.ref], { opacity: 0 })
-        .set(file.stamp, { opacity: 0, scale: 1.6, rotation: -20 })
         .set(dot.current, { y: () => center(0), opacity: 0 })
         .to(dot.current, { opacity: 1, duration: FADE, ease: EASE_OUT });
 
@@ -88,6 +145,9 @@ export function Trace() {
             .to(file.values[k], { opacity: 1, yPercent: 0, duration: TRAVEL, ease: EASE_OUT }, "<")
             .to(file.flashes[k], { opacity: 1, duration: FADE / 2 }, "<")
             .to(file.flashes[k], { opacity: 0, duration: FADE * 2 }, ">");
+          // Reaching Settlement plays the receipt; going back above resets it.
+          if (r.receipt)
+            t.to({}, { duration: 0.01, onComplete: () => rc.play(0), onReverseComplete: () => blankReceipt(rc) }, "<");
         });
         if (i === FILE_ROWS[0].step) t.to(file.ref, { opacity: 1, duration: FADE }, "<");
         // Swap the status chip when the log says the claim changed state.
@@ -98,8 +158,6 @@ export function Trace() {
         });
       }
       t.to(done.current, { opacity: 1, duration: FADE, ease: EASE_OUT }, `+=${HOLD / 2}`)
-        // Last: the stamp lands on the file.
-        .to(file.stamp, { ...STAMP_REST, duration: TRAVEL * 1.4, ease: "back.out(2.2)" }, "<")
         // Hold the settled file for a beat before the pin lets go.
         .to({}, { duration: HOLD * 1.5 });
       return t;
@@ -152,6 +210,7 @@ export function Trace() {
 
   const replay = () => {
     setPlayed(false);
+    resetReceipt.current();
     tl.current?.play(0);
   };
 

@@ -546,3 +546,32 @@
 .link[aria-current="location"] {
   color: var(--fg);
 }
+
+/*
+  Settlement receipt (claim file). Each digit of the amount is a window onto
+  a 0-9 strip that rolls into place (translateY only). Every character of
+  the amount shares the window's height so the row keeps one baseline.
+*/
+.odo,
+.odo-cell {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25em;
+}
+.odo {
+  overflow: hidden;
+}
+.odo-strip {
+  display: block;
+}
+.odo-strip > span {
+  display: block;
+  height: 1.25em;
+  line-height: 1.25em;
+}
+
+/* The stamp's ink: a fixed speckle so the press reads as ink, not a box. */
+.claim-stamp {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-size: 140px 140px;
+}

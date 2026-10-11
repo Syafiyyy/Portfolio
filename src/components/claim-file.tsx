@@ -12,6 +12,12 @@ import { TRACE } from "@/data/site";
     [data-file-status=k]    status chip states, cross-faded
     [data-file-ref]         the claim reference in the header
     [data-file-stamp]       the SETTLED stamp
+    [data-file-ink]         ink left by the stamp as it presses
+    [data-file-card]        the card itself (nudged by the stamp)
+  The settlement row is a receipt that settles in place:
+    [data-odo=d]            a digit's 0-9 strip, rolled to digit d
+    [data-inv-char]         one character of the e-invoice number
+    [data-inv-caret]        the caret that types it
 */
 
 // Log lines separate fields with two or more spaces: "policy.verify  active  cover=…".
@@ -57,7 +63,12 @@ export const FILE_ROWS = [
     // rls=owner_only -> "owner-only access"
     value: `${record.kv.rls.replace(/_/g, "-")} access · ${human(record.kv.status)}`,
   },
-  { step: settle.i, label: "Settlement", value: `${amount} · e-invoice ${settle.kv.einvoice}` },
+  {
+    step: settle.i,
+    label: "Settlement",
+    value: `${amount} · e-invoice ${settle.kv.einvoice}`,
+    receipt: { amount, einvoice: settle.kv.einvoice },
+  },
 ];
 
 // Status chip: what the log says the claim is at each point.
@@ -67,9 +78,60 @@ export const FILE_STATUS = [
   { step: settle.i, text: "settled" },
 ];
 
+// Odometer strip: 0-9 twice, so every digit spins through a full turn.
+const STRIP = "01234567890123456789";
+// The strip's offset (in % of its height) that shows digit d on its second turn.
+export const odoAt = (d: number) => -((10 + d) * 100) / STRIP.length;
+
+// "RM 2,340.00 · e-invoice LHDN-SB-0042": digits roll, the number types.
+function Receipt({ amount, einvoice }: { amount: string; einvoice: string }) {
+  return (
+    <>
+      {/* Every character gets the same cell, so digits and "RM , ." share a baseline. */}
+      <span aria-hidden className="inline-flex whitespace-nowrap tabular-nums">
+        {[...amount].map((c, j) =>
+          /\d/.test(c) ? (
+            <span key={j} className="odo">
+              {/* Rendered on its final digit, so without JS the amount is right. */}
+              <span data-odo={c} className="odo-strip" style={{ transform: `translateY(${odoAt(Number(c))}%)` }}>
+                {[...STRIP].map((d, n) => (
+                  <span key={n}>{d}</span>
+                ))}
+              </span>
+            </span>
+          ) : (
+            <span key={j} className="odo-cell">
+              {/* A lone space in a block cell collapses; keep its width. */}
+              {c === " " ? " " : c}
+            </span>
+          ),
+        )}
+      </span>{" "}
+      <span aria-hidden>·</span> <span aria-hidden className="inline-block">e-invoice</span>{" "}
+      <span aria-hidden className="relative inline-block font-mono text-[0.92em]">
+        {[...einvoice].map((c, j) => (
+          <span key={j} data-inv-char>
+            {c}
+          </span>
+        ))}
+        <span data-inv-caret className="absolute inset-y-[0.12em] left-0 w-[0.55ch] bg-sky opacity-0" />
+      </span>
+    </>
+  );
+}
+
+function Stamp({ amount }: { amount: string }) {
+  return (
+    <>
+      <span className="block text-lg font-medium leading-none tracking-[0.2em]">SETTLED</span>
+      <span className="mt-1 block text-xs leading-none">{amount}</span>
+    </>
+  );
+}
+
 export function ClaimFile() {
   return (
-    <div className="relative min-w-0 overflow-hidden rounded-md border bg-surface">
+    <div data-file-card className="relative min-w-0 overflow-hidden rounded-md border bg-surface">
       <div className="flex items-center justify-between gap-4 border-b px-4 py-2.5 text-sm">
         <span className="text-muted">
           Claim file <span data-file-ref className="ml-1 inline-block font-mono text-fg">{CLAIM_REF}</span>
@@ -116,13 +178,23 @@ export function ClaimFile() {
                     </span>
                   )}
                   <span className="min-w-0">
-                    {/* Words stay whole: no break inside "e-invoice" or "LHDN-SB-0042". */}
-                    {r.value.split(/(\s+)/).map((t, j) =>
-                      j % 2 ? t : (
-                        <span key={j} className="inline-block max-w-full">
-                          {t}
-                        </span>
-                      ),
+                    {r.receipt ? (
+                      <>
+                        {/* Read as one line; the animated pieces are hidden from it. */}
+                        <span className="sr-only">{r.value}</span>
+                        <Receipt {...r.receipt} />
+                      </>
+                    ) : (
+                      // Words stay whole: no break inside "owner-only" and the like.
+                      r.value.split(/(\s+)/).map((t, j) =>
+                        j % 2 ? (
+                          t
+                        ) : (
+                          <span key={j} className="inline-block max-w-full">
+                            {t}
+                          </span>
+                        ),
+                      )
                     )}
                   </span>
                 </span>
@@ -134,14 +206,21 @@ export function ClaimFile() {
       {/* Room for the stamp so it never covers a value. */}
       <div aria-hidden className="h-14 border-t border-dashed" />
 
-      {/* The last thing to land. Amber is the claim's colour on this site. */}
+      {/* The last thing to land. Amber is the claim's colour on this site.
+          The ink copy sits under it and spreads out as the stamp presses. */}
+      <div
+        data-file-ink
+        aria-hidden
+        className="claim-stamp pointer-events-none absolute bottom-3 right-4 rounded-sm px-3 py-1.5 text-center font-mono text-amber opacity-0"
+      >
+        <Stamp amount={amount} />
+      </div>
       <div
         data-file-stamp
         aria-hidden
         className="claim-stamp pointer-events-none absolute bottom-3 right-4 rounded-sm px-3 py-1.5 text-center font-mono text-amber"
       >
-        <span className="block text-lg font-medium leading-none tracking-[0.2em]">SETTLED</span>
-        <span className="mt-1 block text-xs leading-none">{amount}</span>
+        <Stamp amount={amount} />
       </div>
     </div>
   );
