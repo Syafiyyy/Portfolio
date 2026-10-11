@@ -1,6 +1,7 @@
 import { Trace } from "@/components/trace";
 import { Contact } from "@/components/contact";
-import { Portrait } from "@/components/portrait";
+import { IdBadge } from "@/components/badge/id-badge";
+import { LinkQr } from "@/components/badge/link-qr";
 import { DamageScan } from "@/components/car/damage-scan";
 import { ChessBoard } from "@/components/signatures/chess-board";
 import { CountUp } from "@/components/count-up";
@@ -16,9 +17,10 @@ export default function Page() {
       <section className="relative overflow-hidden">
         <div aria-hidden data-intro-part="grid" className="hero-grid pointer-events-none absolute inset-0" />
         <div className="frame relative grid items-center gap-8 pb-20 pt-10 sm:pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-14 lg:pt-20 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
-          {/* Portrait sits above the headline on small screens, right of it on large. */}
-          <div data-intro-part="portrait" className="w-[13.5rem] sm:w-64 lg:order-2 lg:w-full">
-            <Portrait />
+          {/* The ID badge hangs above the headline on small screens, right of
+              it on large; it hangs from the top, so it isn't centred. */}
+          <div data-intro-part="portrait" className="self-start lg:order-2 lg:justify-self-center">
+            <IdBadge qr={<LinkQr url={SITE.links.linkedin} label="QR code: LinkedIn profile" className="block size-[4.25rem]" />} />
           </div>
           <div className="max-w-3xl lg:order-1">
             <p data-intro-part="eyebrow" className="text-muted">
@@ -31,7 +33,7 @@ export default function Page() {
             <div data-intro-part="late" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
               <Magnetic>
                 <TextLink href="#drivecover" tone="sky" arrow="↓">
-                  See how a claim moves through DriveCover
+                  See my work
                 </TextLink>
               </Magnetic>
               <Magnetic>
@@ -47,7 +49,8 @@ export default function Page() {
       {/* DriveCover */}
       <SectionFrame id="drivecover" kicker="~/work/drivecover" title="DriveCover" band>
         <div className="max-w-2xl">
-          <p className="text-lead text-muted">{DRIVECOVER.summary}</p>
+          <p className="text-lead">{DRIVECOVER.lead}</p>
+          <p className="mt-3 text-lead text-muted">{DRIVECOVER.summary}</p>
           <p className="mt-4">Below is one claim, from the moment a driver reports it to the moment it is paid.</p>
         </div>
 

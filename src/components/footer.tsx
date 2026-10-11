@@ -9,7 +9,9 @@ export function Footer() {
       <div className="frame grid gap-8 py-12 text-sm sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div>
           <p className="font-medium">{SITE.name}</p>
-          <p className="mt-1 text-muted">Backend developer, {SITE.location}</p>
+          <p className="mt-1 text-muted">
+            {SITE.role}, {SITE.location}
+          </p>
           <p className="mt-4 font-mono text-xs text-muted">
             last claim <span className="text-fg">{CLAIM_REF}</span> · <span className="text-amber">settled</span>
           </p>

@@ -5,9 +5,10 @@ export const SITE = {
   fullName: "Adam Syafi Bin Abdul Aziz",
   url: "https://portfolio-blond-nu-58.vercel.app",
   location: "Selangor, Malaysia",
-  headline: "I build backend systems that handle real money and real claims.",
+  role: "Full-stack developer",
+  headline: "I design and build software, end to end.",
   intro:
-    "IT student at Universiti Poly-Tech Malaysia. I like the parts of software most people never see: payments, permissions, and the rules that decide who gets paid.",
+    "IT student at UPTM, based in Selangor. I care about both sides of a product: the interface people touch, and the systems underneath that keep it working.",
   resume: "/Resume_Adam_Syafi.pdf",
   // Hero portrait, 3:4. A cut-out (transparent background) from the original
   // PNG: 900 × 1200 WebP with alpha, quality 82.
@@ -20,8 +21,30 @@ export const SITE = {
   openTo: "Open to internships, freelance work and research assistant roles.",
 };
 
+// The developer ID badge in the hero (my own design, not a university card).
+// Front: these mono lines plus a QR code to LinkedIn. Back: STACK.
+export const BADGE = {
+  handle: "~/adam-syafi", // printed on the lanyard
+  lines: [
+    { key: "access", value: "frontend · backend · ai" },
+    { key: "based", value: "Selangor, MY" },
+    { key: "edu", value: "BIT @ UPTM" },
+  ],
+  status: "open to work",
+};
+
+// Tech I have shipped with, grouped as on the badge's back. Every item is
+// used in a project on this site (DriveCover, the chess club app, this
+// portfolio itself) or listed on my resume (Java, JavaFX, PHP, MySQL, Laravel).
+export const STACK = [
+  { group: "frontend", items: ["Next.js", "Tailwind", "GSAP", "three.js", "Flutter", "JavaFX"] },
+  { group: "backend", items: ["NestJS", "Laravel", "PHP", "Java", "Prisma", "PostgreSQL", "MySQL", "Supabase", "Firebase", "Stripe"] },
+  { group: "ai", items: ["Gemini", "Stockfish"] },
+];
+
 export const DRIVECOVER = {
   name: "DriveCover",
+  lead: "I build backend systems that handle real money and real claims.",
   summary:
     "A motor insurance web app for the Malaysian market. Customers get a quote, buy cover, file a claim and renew, all in one place. It is my final year project, built to the rules a real insurer has to follow.",
   repo: "https://github.com/Syafiyyy/drivecover",

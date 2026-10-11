@@ -25,7 +25,7 @@ const revealEase = gsap.parseEase("power2.inOut");
   - the pointer re-covers cells near it, which then fade back to the photo
   The loop only runs while something is changing.
 */
-export function Portrait() {
+export function Portrait({ className = "relative aspect-[3/4] w-full overflow-hidden rounded-md border bg-surface" }: { className?: string }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const img = useRef<HTMLImageElement>(null);
@@ -71,9 +71,9 @@ export function Portrait() {
 
     // Sample the photo's brightness per cell, cropped like object-cover.
     const sample = () => {
-      const r = el.getBoundingClientRect();
-      w = r.width;
-      h = r.height;
+      // Layout size, not the on-screen box: the badge rotates this element.
+      w = el.offsetWidth;
+      h = el.offsetHeight;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       cv.width = Math.round(w * dpr);
       cv.height = Math.round(h * dpr);
@@ -268,11 +268,13 @@ export function Portrait() {
   }, []);
 
   return (
-    <div ref={wrap} className="relative aspect-[3/4] w-full overflow-hidden rounded-md border bg-surface">
+    <div ref={wrap} className={className}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={img}
         src={SITE.portrait.src}
+        // No native image drag: on the badge it left a faded copy of the photo.
+        draggable={false}
         alt={`Photo of ${SITE.name}`}
         width={SITE.portrait.width}
         height={SITE.portrait.height}

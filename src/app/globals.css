@@ -14,6 +14,7 @@
   paper  #f5f7fa  page background (light)
   sky    #38bdf8  links, active system node
   amber  #f5a524  the claim travelling through the system; used nowhere else
+  ok     #22c55e  the badge's "open to work" dot only
   slate  #8a97ab  secondary text
   line   #1d2738  hairlines and inactive nodes
 */
@@ -27,6 +28,7 @@
   --sky: #0369a1;
   --amber: #b45309;
   --amber-soft: #fde9c8;
+  --ok: #15803d;
   --board-light: #e6ebf2;
   --board-dark: #bcc8d8;
   --piece-white: #ffffff;
@@ -43,6 +45,7 @@
   --sky: #38bdf8;
   --amber: #f5a524;
   --amber-soft: #3a2a10;
+  --ok: #22c55e;
   --board-light: #3a4a64;
   --board-dark: #26334a;
   --piece-white: #f1f5f9;
@@ -574,4 +577,124 @@
 .claim-stamp {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.95'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   mask-size: 140px 140px;
+}
+
+/*
+  Hero ID badge (components/badge/id-badge.tsx). The lanyard runs up out of
+  the hero (clipped by its overflow): --strap-out above the badge's column,
+  --strap-in inside it. The live rope's anchor is the strap's top.
+*/
+.badge-swing-vars {
+  --strap-in: 2.75rem;
+  /* Long, so the anchor sits far above the hero: the card can be dragged
+     around freely within the rope's small stretch, and swings stay gentle. */
+  --strap-out: 40rem;
+}
+@media (min-width: 64rem) {
+  .badge-swing-vars {
+    --strap-in: 5rem;
+  }
+}
+.badge-strap {
+  /* Positioned by utilities (absolute); no position here, since unlayered
+     CSS would override them. */
+  width: 1.375rem;
+  height: calc(var(--strap-in) + var(--strap-out));
+  overflow: hidden;
+  /* Solid sky printed in the page colour: 4.5:1+ in both themes. */
+  background: var(--sky);
+  box-shadow:
+    inset 2px 0 0 color-mix(in srgb, var(--bg) 25%, transparent),
+    inset -2px 0 0 color-mix(in srgb, var(--bg) 25%, transparent);
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.375rem;
+  letter-spacing: 0.08em;
+  white-space: pre;
+  color: var(--bg);
+}
+.badge-strap > span {
+  display: block;
+  /* Start the print just above the clip so the handle reads where it shows. */
+  transform: rotate(180deg);
+}
+.badge-clip {
+  position: relative;
+  z-index: 10;
+  width: 2.25rem;
+  height: 1.1rem;
+  border-radius: 0.35rem;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--muted) 80%, var(--fg)), var(--muted));
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.35);
+}
+.badge-card {
+  perspective: 1400px;
+}
+.badge-tilt,
+.badge-flipper {
+  transform-style: preserve-3d;
+}
+/* The live lanyard (SVG): a band with the handle printed along it. */
+.badge-rope-band {
+  fill: none;
+  stroke: var(--sky);
+  stroke-width: 1.375rem;
+}
+.badge-rope-print {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  fill: var(--bg);
+  white-space: pre;
+}
+.badge-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.badge-back {
+  transform: rotateY(180deg);
+}
+.badge-slot {
+  position: absolute;
+  top: 0.6rem;
+  left: 50%;
+  width: 2.5rem;
+  height: 0.375rem;
+  margin-left: -1.25rem;
+  border-radius: 9999px;
+  background: var(--bg);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.4);
+}
+.badge-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--ok);
+}
+.badge-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--ok);
+  animation: badge-ping 2.2s ease-out infinite;
+}
+@keyframes badge-ping {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70%,
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-dot::after {
+    animation: none;
+    opacity: 0;
+  }
 }

@@ -168,6 +168,7 @@ export function ClaimFile() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/models/car-poster.webp"
+                        draggable={false}
                         alt=""
                         width={1400}
                         height={700}

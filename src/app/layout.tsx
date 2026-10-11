@@ -9,7 +9,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: `${SITE.name}, backend developer`,
+  title: `${SITE.name}, ${SITE.role.toLowerCase()}`,
   description: SITE.headline,
   openGraph: {
     title: SITE.name,
