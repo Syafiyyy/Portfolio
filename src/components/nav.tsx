@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { useTheme } from "next-themes";
+import { useState } from "react";
 import { SITE } from "@/data/site";
 import { ClaimProgress, CLAIM_STATUSES } from "@/components/claim-progress";
+import { TextLink } from "@/components/text-link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
   { href: "#drivecover", label: "Work" },
@@ -12,14 +13,6 @@ const LINKS = [
 ];
 
 export function Nav() {
-  const { resolvedTheme, setTheme } = useTheme();
-  // false during SSR and hydration, true after: avoids a theme label mismatch.
-  const mounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-  const isDark = resolvedTheme === "dark";
   // Latest claim status passed while scrolling (-1: none yet).
   const [status, setStatus] = useState(-1);
   const settled = status === CLAIM_STATUSES.length - 1;
@@ -41,23 +34,16 @@ export function Nav() {
             {CLAIM_STATUSES[Math.max(status, 0)]}
           </span>
         </div>
-        <div className="flex items-center gap-5 text-muted">
+        <div className="flex items-center gap-5">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="hidden transition-colors duration-150 hover:text-fg sm:inline">
+            <TextLink key={l.href} href={l.href} className="hidden sm:inline-flex">
               {l.label}
-            </a>
+            </TextLink>
           ))}
-          <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="transition-colors duration-150 hover:text-fg">
-            Resume
-          </a>
-          <button
-            type="button"
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="transition-colors duration-150 hover:text-fg"
-            aria-label={mounted ? `Switch to ${isDark ? "light" : "dark"} mode` : "Toggle theme"}
-          >
-            {mounted ? (isDark ? "Light" : "Dark") : "Theme"}
-          </button>
+          <TextLink href={SITE.resume}>Resume</TextLink>
+          <span className="text-muted">
+            <ThemeToggle />
+          </span>
         </div>
       </nav>
       <ClaimProgress onStatus={setStatus} />

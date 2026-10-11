@@ -201,7 +201,7 @@ export function Trace() {
               type="button"
               onClick={replay}
               disabled={!played}
-              className="font-medium text-sky transition-opacity duration-150 disabled:opacity-40"
+              className="press font-medium text-sky transition-[opacity,transform] duration-150 disabled:opacity-40"
             >
               Replay claim
             </button>

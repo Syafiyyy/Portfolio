@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Magnetic } from "@/components/magnetic";
+import { TextLink } from "@/components/text-link";
 import { SITE } from "@/data/site";
 
 /*
@@ -23,8 +24,6 @@ export function Contact() {
       window.location.href = `mailto:${SITE.email}`;
     }
   };
-
-  const linkClass = "underline-offset-4 transition-colors duration-150 hover:text-sky hover:underline";
 
   return (
     <div>
@@ -52,20 +51,14 @@ export function Contact() {
           <button
             type="button"
             onClick={copy}
-            className="rounded-md border px-3 py-1.5 text-muted transition-colors duration-150 hover:border-sky hover:text-fg"
+            className="press rounded-md border px-3 py-1.5 text-muted transition-[color,border-color,transform] duration-150 hover:border-sky hover:text-fg"
           >
             {copied ? "Copied" : "Copy email"}
           </button>
         </Magnetic>
-        <a href={SITE.links.github} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          GitHub
-        </a>
-        <a href={SITE.links.linkedin} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          LinkedIn
-        </a>
-        <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className={linkClass}>
-          Resume
-        </a>
+        <TextLink href={SITE.links.github}>GitHub</TextLink>
+        <TextLink href={SITE.links.linkedin}>LinkedIn</TextLink>
+        <TextLink href={SITE.resume}>Resume</TextLink>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { DamageScan } from "@/components/car/damage-scan";
 import { ChessBoard } from "@/components/signatures/chess-board";
 import { CountUp } from "@/components/count-up";
 import { Magnetic } from "@/components/magnetic";
+import { TextLink } from "@/components/text-link";
 import { SITE, DRIVECOVER, PROJECTS, EDUCATION } from "@/data/site";
 
 export default function Page() {
@@ -29,14 +30,14 @@ export default function Page() {
             <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lead text-muted">{SITE.intro}</p>
             <div data-intro-part="late" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
               <Magnetic>
-                <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
+                <TextLink href="#drivecover" tone="sky" arrow="↓">
                   See how a claim moves through DriveCover
-                </a>
+                </TextLink>
               </Magnetic>
               <Magnetic>
-                <a href={SITE.resume} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+                <TextLink href={SITE.resume} className="text-fg">
                   Download resume
-                </a>
+                </TextLink>
               </Magnetic>
             </div>
           </div>
@@ -78,9 +79,9 @@ export default function Page() {
 
           <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             <p className="text-muted">Built with {DRIVECOVER.stack.join(", ")}.</p>
-            <a href={DRIVECOVER.repo} target="_blank" rel="noopener noreferrer" className="font-medium text-sky underline-offset-4 hover:underline">
+            <TextLink href={DRIVECOVER.repo} tone="sky" className="font-medium">
               View the code on GitHub
-            </a>
+            </TextLink>
           </div>
         </div>
       </section>
@@ -103,9 +104,9 @@ export default function Page() {
                     <p className="max-w-[65ch] leading-relaxed text-muted">{p.description}</p>
                     <p className="mt-2 text-sm">{p.stack.join(", ")}</p>
                     {p.href && (
-                      <a href={p.href} className="mt-2 inline-block text-sm font-medium text-sky underline-offset-4 hover:underline">
+                      <TextLink href={p.href} tone="sky" className="mt-2 text-sm font-medium">
                         View project
-                      </a>
+                      </TextLink>
                     )}
                   </div>
                   {p.signature === "chess" && <ChessBoard />}

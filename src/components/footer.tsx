@@ -1,5 +1,6 @@
 import { SITE } from "@/data/site";
 import { CLAIM_REF } from "@/components/claim-file";
+import { TextLink } from "@/components/text-link";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -21,13 +22,13 @@ export function Footer() {
           <p className="font-mono text-meta">credits</p>
           <p className="mt-2">
             Car model from Kenney&apos;s{" "}
-            <a href="https://kenney.nl/assets/car-kit" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-fg">
+            <TextLink href="https://kenney.nl/assets/car-kit" inline>
               Car Kit
-            </a>{" "}
+            </TextLink>{" "}
             (CC0). Chess evals computed with{" "}
-            <a href="https://stockfishchess.org" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-fg">
+            <TextLink href="https://stockfishchess.org" inline>
               Stockfish
-            </a>
+            </TextLink>
             .
           </p>
         </div>
@@ -37,9 +38,9 @@ export function Footer() {
           <span>
             © {year} {SITE.name}
           </span>
-          <a href="#top" className="transition-colors duration-150 hover:text-fg">
-            Back to top ↑
-          </a>
+          <TextLink href="#top" arrow="↑">
+            Back to top
+          </TextLink>
         </div>
       </div>
     </footer>
