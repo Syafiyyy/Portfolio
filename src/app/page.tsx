@@ -23,10 +23,10 @@ export default function Page() {
             <p data-intro-part="eyebrow" className="text-muted">
               {SITE.name}, {SITE.location}
             </p>
-            <h1 data-intro-part="headline" className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl lg:text-[3.4rem]">
+            <h1 data-intro-part="headline" className="mt-4 text-display">
               {SITE.headline}
             </h1>
-            <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lg leading-relaxed text-muted">{SITE.intro}</p>
+            <p data-intro-part="sub" className="mt-6 max-w-[60ch] text-lead text-muted">{SITE.intro}</p>
             <div data-intro-part="late" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium">
               <Magnetic>
                 <a href="#drivecover" className="text-sky underline-offset-4 hover:underline">
@@ -47,9 +47,11 @@ export default function Page() {
       <section className="border-t">
         <div className="mx-auto max-w-5xl px-5 py-20">
           <div className="max-w-2xl">
-            <Heading id="drivecover">DriveCover</Heading>
-            <p className="mt-4 leading-relaxed text-muted">{DRIVECOVER.summary}</p>
-            <p className="mt-4 leading-relaxed">
+            <Heading id="drivecover" kicker="~/work/drivecover">
+              DriveCover
+            </Heading>
+            <p className="mt-5 text-lead text-muted">{DRIVECOVER.summary}</p>
+            <p className="mt-4">
               Below is one claim, from the moment a driver reports it to the moment it is paid.
             </p>
           </div>
@@ -66,10 +68,10 @@ export default function Page() {
             {DRIVECOVER.facts.map((f) => (
               <div key={f.label} className="bg-bg p-5">
                 <dt className="sr-only">{f.label}</dt>
-                <dd className="font-mono text-2xl">
+                <dd className="font-mono text-figure">
                   <CountUp value={f.value} />
                 </dd>
-                <dd className="mt-1 text-sm leading-snug text-muted">{f.label}</dd>
+                <dd className="mt-2 text-sm leading-snug text-muted">{f.label}</dd>
               </div>
             ))}
           </dl>
@@ -86,13 +88,15 @@ export default function Page() {
       {/* Projects */}
       <section className="border-t">
         <div className="mx-auto max-w-5xl px-5 py-20">
-          <Heading id="projects">Other projects</Heading>
+          <Heading id="projects" kicker="~/projects">
+            Other projects
+          </Heading>
           <ul className="mt-8 divide-y border-y">
             {PROJECTS.map((p) => (
               <li key={p.name} className="grid gap-2 py-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
                 <div>
-                  <p className="font-medium">{p.name}</p>
-                  <p className="text-sm text-muted">{p.period}</p>
+                  <p className="text-title">{p.name}</p>
+                  <p className="mt-1 text-sm tabular-nums text-muted">{p.period}</p>
                 </div>
                 <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-10">
                   <div>
@@ -115,11 +119,13 @@ export default function Page() {
       {/* Education */}
       <section className="border-t">
         <div className="mx-auto max-w-5xl px-5 py-20">
-          <Heading id="education">Education</Heading>
+          <Heading id="education" kicker="~/education">
+            Education
+          </Heading>
           <ul className="mt-8 divide-y border-y">
             {EDUCATION.map((e) => (
               <li key={e.degree} className="grid gap-2 py-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
-                <p className="text-sm text-muted sm:pt-0.5">{e.period}</p>
+                <p className="text-sm tabular-nums text-muted sm:pt-0.5">{e.period}</p>
                 <div>
                   <p className="font-medium">{e.degree}</p>
                   <p className="text-muted">{e.school}</p>
@@ -134,8 +140,10 @@ export default function Page() {
       {/* Contact */}
       <section className="border-t">
         <div className="mx-auto max-w-5xl px-5 pb-28 pt-20">
-          <Heading id="contact">Contact</Heading>
-          <p className="mt-4 max-w-[60ch] leading-relaxed text-muted">{SITE.openTo} Email is the fastest way to reach me.</p>
+          <Heading id="contact" kicker="~/contact">
+            Contact
+          </Heading>
+          <p className="mt-5 max-w-[60ch] text-lead text-muted">{SITE.openTo} Email is the fastest way to reach me.</p>
           <div className="mt-12">
             <Contact />
           </div>

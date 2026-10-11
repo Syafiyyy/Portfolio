@@ -94,7 +94,7 @@ export function ClaimFile() {
         {FILE_ROWS.map((r, i) => (
           <div key={r.label} data-file-row={i} className="relative grid grid-cols-[5rem_minmax(0,1fr)] items-center gap-3 py-2.5 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
             <span data-file-flash={i} aria-hidden className="pointer-events-none absolute -inset-x-4 inset-y-0 bg-sky/10 opacity-0" />
-            <dt className="font-mono text-[11px] uppercase tracking-wider text-muted">{r.label}</dt>
+            <dt className="font-mono text-meta lowercase text-muted">{r.label}</dt>
             <dd className="relative min-w-0">
               <span data-file-skeleton={i} aria-hidden className="absolute left-0 top-1/2 h-2 w-32 -translate-y-1/2 rounded-full bg-line opacity-0" />
               {/* Mask for the slide-up; a block so the value wraps inside it. */}

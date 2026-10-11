@@ -14,11 +14,11 @@ export function Footer() {
           </p>
         </div>
         <div className="text-muted">
-          <p className="font-mono text-xs uppercase tracking-wider">Built with</p>
+          <p className="font-mono text-meta">built with</p>
           <p className="mt-2">Next.js, Tailwind, three.js (React Three Fiber), GSAP and Lenis.</p>
         </div>
         <div className="text-muted">
-          <p className="font-mono text-xs uppercase tracking-wider">Credits</p>
+          <p className="font-mono text-meta">credits</p>
           <p className="mt-2">
             Car model from Kenney&apos;s{" "}
             <a href="https://kenney.nl/assets/car-kit" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-fg">

@@ -6,9 +6,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Section heading that slides up out of a mask the first time it enters view,
-// while a scan line crosses it (the site's scan language) and fades.
-export function Heading({ children, id }: { children: React.ReactNode; id?: string }) {
+// Section heading: a lowercase mono path kicker ("~/work/drivecover") over a
+// heading-tier title that slides up out of a mask the first time it enters
+// view, while a scan line crosses it (the site's scan language) and fades.
+export function Heading({ children, id, kicker }: { children: React.ReactNode; id?: string; kicker: string }) {
   const inner = useRef<HTMLSpanElement>(null);
   const text = useRef<HTMLSpanElement>(null);
   const line = useRef<HTMLSpanElement>(null);
@@ -40,20 +41,27 @@ export function Heading({ children, id }: { children: React.ReactNode; id?: stri
   }, []);
 
   return (
-    <h2 id={id} className="scroll-mt-20 text-2xl font-semibold tracking-tight">
-      {/* pb/-mb keep descenders inside the mask */}
-      <span className="-mb-[0.15em] block overflow-hidden pb-[0.15em]">
-        <span ref={inner} className="block">
-          <span ref={text} className="relative inline-block">
-            {children}
-            <span
-              ref={line}
-              aria-hidden
-              className="pointer-events-none absolute -bottom-[0.05em] -top-[0.05em] left-0 w-[2px] bg-sky opacity-0 shadow-[0_0_12px_2px_color-mix(in_srgb,var(--sky)_55%,transparent)]"
-            />
+    // The id sits on the wrapper so jumping to a section shows the kicker too.
+    <div id={id} className="scroll-mt-20">
+      <p className="font-mono text-meta text-muted">
+        <span className="text-sky">~</span>
+        {kicker.replace(/^~/, "")}
+      </p>
+      <h2 className="mt-3 text-heading">
+        {/* pb/-mb keep descenders inside the mask */}
+        <span className="-mb-[0.15em] block overflow-hidden pb-[0.15em]">
+          <span ref={inner} className="block">
+            <span ref={text} className="relative inline-block">
+              {children}
+              <span
+                ref={line}
+                aria-hidden
+                className="pointer-events-none absolute -bottom-[0.05em] -top-[0.05em] left-0 w-[2px] bg-sky opacity-0 shadow-[0_0_12px_2px_color-mix(in_srgb,var(--sky)_55%,transparent)]"
+              />
+            </span>
           </span>
         </span>
-      </span>
-    </h2>
+      </h2>
+    </div>
   );
 }
