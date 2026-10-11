@@ -210,3 +210,13 @@
 .chess-move[data-active] {
   color: var(--sky);
 }
+
+/* Claim file stamp: double rule in the claim's amber, set at an angle. */
+.claim-stamp {
+  border: 2px solid var(--amber);
+  box-shadow:
+    inset 0 0 0 2px var(--surface),
+    inset 0 0 0 3px var(--amber);
+  background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+  transform: rotate(-8deg);
+}

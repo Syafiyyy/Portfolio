@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { TRACE } from "@/data/site";
+import { ClaimFile, FILE_ROWS, FILE_STATUS } from "@/components/claim-file";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -37,12 +38,29 @@ export function Trace() {
       return b.top - r.top + b.height / 2;
     };
     const count = TRACE.length;
+    const el = root.current!;
+    const q = (sel: string) => Array.from(el.querySelectorAll<HTMLElement>(sel));
+    const one = (sel: string) => el.querySelector<HTMLElement>(sel);
+    const file = {
+      values: q("[data-file-value]"),
+      skeletons: q("[data-file-skeleton]"),
+      flashes: q("[data-file-flash]"),
+      statuses: q("[data-file-status]"),
+      ref: one("[data-file-ref]"),
+      stamp: one("[data-file-stamp]"),
+    };
+    const STAMP_REST = { opacity: 1, scale: 1, rotation: -8 };
 
     const showFinal = () => {
       gsap.set(glows.current, { opacity: 1 });
       gsap.set(logs.current, { opacity: 1, y: 0 });
       gsap.set(dot.current, { opacity: 1, y: center(count - 1) });
       gsap.set(done.current, { opacity: 1 });
+      gsap.set(file.values, { opacity: 1, yPercent: 0 });
+      gsap.set([...file.skeletons, ...file.flashes], { opacity: 0 });
+      gsap.set(file.statuses, { opacity: (k) => (k === file.statuses.length - 1 ? 1 : 0) });
+      gsap.set(file.ref, { opacity: 1 });
+      gsap.set(file.stamp, STAMP_REST);
       setPlayed(true);
     };
 
@@ -51,6 +69,11 @@ export function Trace() {
       t.set(glows.current, { opacity: 0 })
         .set(logs.current, { opacity: 0, y: 4 })
         .set(done.current, { opacity: 0 })
+        // The claim file starts blank: placeholder bars, no status, no stamp.
+        .set(file.values, { opacity: 0, yPercent: 110 })
+        .set(file.skeletons, { opacity: 1 })
+        .set([...file.flashes, ...file.statuses, file.ref], { opacity: 0 })
+        .set(file.stamp, { opacity: 0, scale: 1.6, rotation: -20 })
         .set(dot.current, { y: () => center(0), opacity: 0 })
         .to(dot.current, { opacity: 1, duration: FADE, ease: EASE_OUT });
 
@@ -58,15 +81,35 @@ export function Trace() {
         if (i > 0) t.to(dot.current, { y: () => center(i), duration: TRAVEL, ease: "power2.inOut" }, `+=${HOLD}`);
         t.to(glows.current[i], { opacity: 1, duration: FADE, ease: EASE_OUT })
           .to(logs.current[i], { opacity: 1, y: 0, duration: FADE, ease: EASE_OUT }, "<");
+        // Fill this step's rows of the claim file.
+        FILE_ROWS.forEach((r, k) => {
+          if (r.step !== i) return;
+          t.to(file.skeletons[k], { opacity: 0, duration: FADE }, "<")
+            .to(file.values[k], { opacity: 1, yPercent: 0, duration: TRAVEL, ease: EASE_OUT }, "<")
+            .to(file.flashes[k], { opacity: 1, duration: FADE / 2 }, "<")
+            .to(file.flashes[k], { opacity: 0, duration: FADE * 2 }, ">");
+        });
+        if (i === FILE_ROWS[0].step) t.to(file.ref, { opacity: 1, duration: FADE }, "<");
+        // Swap the status chip when the log says the claim changed state.
+        FILE_STATUS.forEach((st, k) => {
+          if (st.step !== i) return;
+          if (k > 0) t.to(file.statuses[k - 1], { opacity: 0, duration: FADE }, "<");
+          t.to(file.statuses[k], { opacity: 1, duration: FADE }, "<");
+        });
       }
-      t.to(done.current, { opacity: 1, duration: FADE, ease: EASE_OUT }, `+=${HOLD / 2}`);
+      t.to(done.current, { opacity: 1, duration: FADE, ease: EASE_OUT }, `+=${HOLD / 2}`)
+        // Last: the stamp lands on the file.
+        .to(file.stamp, { ...STAMP_REST, duration: TRAVEL * 1.4, ease: "back.out(2.2)" }, "<")
+        // Hold the settled file for a beat before the pin lets go.
+        .to({}, { duration: HOLD * 1.5 });
       return t;
     };
 
     const mm = gsap.matchMedia(root);
 
-    // Desktop: pin the trace and let scrolling move the claim (~150vh).
-    mm.add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", () => {
+    // Wide screens (columns side by side): pin the trace and let scrolling
+    // move the claim (~150vh). Narrower, the stacked trace is too tall to pin.
+    mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
       tl.current = build();
       ScrollTrigger.create({
         trigger: root.current,
@@ -80,9 +123,12 @@ export function Trace() {
       });
     });
 
-    // Small screens: no pinning; play once on enter, as v1 did.
-    mm.add("(max-width: 767px) and (prefers-reduced-motion: no-preference)", () => {
+    // Smaller screens: no pinning; play once on enter, as v1 did.
+    mm.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
       const t = (tl.current = build());
+      // Paint the blank start state now (file empty, no stamp) rather than on
+      // play, so the finished file never flashes before the trace runs.
+      t.progress(1, true).progress(0, true);
       ScrollTrigger.create({
         trigger: root.current,
         start: "top 65%",
@@ -112,7 +158,7 @@ export function Trace() {
   return (
     <div ref={root} className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-10">
       {/* The system */}
-      <div ref={rail} className="relative min-w-0">
+      <div ref={rail} className="relative min-w-0 lg:self-center">
         <div aria-hidden className="absolute bottom-6 left-[11px] top-6 w-px bg-line" />
         <div
           ref={dot}
@@ -145,49 +191,52 @@ export function Trace() {
         </ol>
       </div>
 
-      {/* The logs */}
-      <div className="flex min-w-0 flex-col self-start rounded-md border bg-surface">
-        <div className="flex items-center justify-between border-b px-4 py-2.5 text-sm text-muted">
-          <span>claim-service.log</span>
-          <button
-            type="button"
-            onClick={replay}
-            disabled={!played}
-            className="font-medium text-sky transition-opacity duration-150 disabled:opacity-40"
-          >
-            Replay claim
-          </button>
-        </div>
-        {/* Lines wrap under their own text (hanging indent past the line
-            number) instead of scrolling sideways on narrow screens. */}
-        <ol className="space-y-3 p-4 font-mono text-[12px] leading-relaxed sm:text-[13px]">
-          {TRACE.map((step, i) => (
-            <li
-              key={step.log}
-              ref={(el) => {
-                logs.current[i] = el;
-              }}
-              className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-[1ch] opacity-0"
+      {/* The claim as a document, then the raw logs behind it */}
+      <div className="flex min-w-0 flex-col gap-4 self-start">
+        <ClaimFile />
+        <div className="flex min-w-0 flex-col rounded-md border bg-surface">
+          <div className="flex items-center justify-between border-b px-4 py-2.5 text-sm text-muted">
+            <span>claim-service.log</span>
+            <button
+              type="button"
+              onClick={replay}
+              disabled={!played}
+              className="font-medium text-sky transition-opacity duration-150 disabled:opacity-40"
             >
-              <span className="text-muted">{String(i + 1).padStart(2, "0")}</span>
-              <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
-                {/* Keep each token whole (no break inside "CLM-2611-0042");
-                    a token wider than the line still breaks. */}
-                {step.log.split(/(\s+)/).map((t, j) =>
-                  j % 2 ? t : (
-                    <span key={j} className="inline-block max-w-full">
-                      {t}
-                    </span>
-                  ),
-                )}
-              </span>
-            </li>
-          ))}
-        </ol>
-        <p ref={done} className="border-t px-4 py-2.5 text-sm opacity-0">
-          <span className="text-amber">Claim settled.</span>{" "}
-          <span className="text-muted">Simulated run; every step maps to code in DriveCover.</span>
-        </p>
+              Replay claim
+            </button>
+          </div>
+          {/* Lines wrap under their own text (hanging indent past the line
+              number) instead of scrolling sideways on narrow screens. */}
+          <ol className="space-y-3 p-4 font-mono text-[12px] leading-relaxed sm:text-[13px]">
+            {TRACE.map((step, i) => (
+              <li
+                key={step.log}
+                ref={(el) => {
+                  logs.current[i] = el;
+                }}
+                className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-[1ch] opacity-0"
+              >
+                <span className="text-muted">{String(i + 1).padStart(2, "0")}</span>
+                <span className="whitespace-pre-wrap [overflow-wrap:anywhere]">
+                  {/* Keep each token whole (no break inside "CLM-2611-0042");
+                      a token wider than the line still breaks. */}
+                  {step.log.split(/(\s+)/).map((t, j) =>
+                    j % 2 ? t : (
+                      <span key={j} className="inline-block max-w-full">
+                        {t}
+                      </span>
+                    ),
+                  )}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <p ref={done} className="border-t px-4 py-2.5 text-sm opacity-0">
+            <span className="text-amber">Claim settled.</span>{" "}
+            <span className="text-muted">Simulated run; every step maps to code in DriveCover.</span>
+          </p>
+        </div>
       </div>
     </div>
   );
