@@ -77,7 +77,7 @@ From a design review of the live site:
 3. Contact finale (email near headline size, `POST /contact`, scan-line hover) and a proper footer with credits.
 4. Claim-status progress bar in the nav (`201 created → under review → settled`, from the trace) and a scan line over section headings.
 
-## v3: global design system (in progress)
+## v3: global design system (done)
 Goal: show UI/UX design skill across the whole page: type, layout, flow, navigation, micro-interactions. Each step is committed separately and reviewed in the browser before the next.
 
 Rules: no new library unless the current stack (GSAP, three.js, Lenis, Motion) can't do it, and then lazy-loaded with its size reported. Lighthouse desktop 95+ / mobile 80+. Respect reduced motion. Stay in the navy / sky / amber system. Every label stays honest to `site.ts`. No uppercase wide-tracked kickers and no em dashes in UI copy.
