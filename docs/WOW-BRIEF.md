@@ -76,3 +76,24 @@ From a design review of the live site:
 2. Claim file beside the pinned trace fills in from `TRACE` data and ends on the amber SETTLED · RM 2,340.00 stamp. Pinning now starts at 1024px.
 3. Contact finale (email near headline size, `POST /contact`, scan-line hover) and a proper footer with credits.
 4. Claim-status progress bar in the nav (`201 created → under review → settled`, from the trace) and a scan line over section headings.
+
+## v3: global design system (in progress)
+Goal: show UI/UX design skill across the whole page: type, layout, flow, navigation, micro-interactions. Each step is committed separately and reviewed in the browser before the next.
+
+Rules: no new library unless the current stack (GSAP, three.js, Lenis, Motion) can't do it, and then lazy-loaded with its size reported. Lighthouse desktop 95+ / mobile 80+. Respect reduced motion. Stay in the navy / sky / amber system. Every label stays honest to `site.ts`. No uppercase wide-tracked kickers and no em dashes in UI copy.
+
+**Phase A**
+1. Type system: fluid scale with clear tiers (display, section heading, title, body, mono meta), tabular figures, balanced headings. Section kickers are lowercase mono paths: `~/work/drivecover`, `~/projects`, `~/education`, `~/contact`.
+2. Micro-interaction language: links draw a sky underline from the left, external links get a nudging ↗, buttons press, designed focus rings, sun/moon theme toggle with a circular View Transitions reveal (instant fallback).
+3. Section handoffs: dividers draw in with a sky leading point, a tonal band for DriveCover, the hero grid echoed faintly at section boundaries. Lighthouse check.
+
+**Phase B**
+4. Smarter nav: active-section indicator, ⌘K / Ctrl+K command palette (native `<dialog>`, lazy-loaded), mobile Menu as a bottom sheet. Scrolling down collapses the nav to just the slim claim-status bar; scrolling up restores it.
+
+**Phase C**
+5. Bolder grid: sticky section titles in a left column on desktop, wider breakout for the car panel and trace, tighter Education. Frame only; project contents unchanged. Lighthouse check.
+
+**Phase D** (project animations)
+6. Chess trap lands: `??` on Bxd1 (backed by the eval swing), eval bar snaps to #2, scan over the mating net, king tips, 1–0 stamp.
+7. Receipt settle: settlement amount rolls up digit by digit, e-invoice number types out, ink-press stamp. No dot flashback.
+8. Car machine vision: point cloud above the scan line, visible damage on bumper and headlamp kept moderate to match the labels. Lighthouse check.
