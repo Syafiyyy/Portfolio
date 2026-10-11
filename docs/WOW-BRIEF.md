@@ -69,3 +69,10 @@ Rule: every project gets its own small signature animation tied to what it actua
 4. Chess club signature animation (precomputed Stockfish evals: `scripts/chess-evals.mjs`).  (done)
 5. Scroll-scrubbed Trace a claim + count-up numbers + magnetic links.  (done)
 6. Mobile, reduced motion, performance pass, Open Graph image, car poster, Lighthouse, then push to `main` (Vercel deploys automatically).  (done)
+
+## Review follow-ups (after v2 launch, done)
+From a design review of the live site:
+1. Trace a claim logs wrap on narrow screens (no hidden sideways scroll).
+2. Claim file beside the pinned trace fills in from `TRACE` data and ends on the amber SETTLED · RM 2,340.00 stamp. Pinning now starts at 1024px.
+3. Contact finale (email near headline size, `POST /contact`, scan-line hover) and a proper footer with credits.
+4. Claim-status progress bar in the nav (`201 created → under review → settled`, from the trace) and a scan line over section headings.
