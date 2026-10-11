@@ -6,7 +6,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import gsap from "gsap";
 import { SCAN } from "@/data/site";
-import { applyScan, createScanPlaneMaterial, createScanUniforms, MAX_ZONES, type ScanUniforms } from "./scan-material";
+import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.js";
+import { applyScan, createCloudMaterial, createScanPlaneMaterial, createScanUniforms, MAX_ZONES, type ScanUniforms } from "./scan-material";
 
 const MODEL = "/models/car.glb";
 
@@ -21,8 +22,19 @@ const ZONES: Record<(typeof SCAN.parts)[number]["part"], { min: THREE.Vector3Tup
 };
 export const PARTS = SCAN.parts.slice(0, MAX_ZONES);
 
+/*
+  The damage drawn on the car, kept to what the labels say: moderate. A
+  shallow dent in the bumper (a dish about a tenth of the bumper's width)
+  and a short crack across the headlamp. Car space, on the front faces;
+  the shader takes zone 0 as the bumper and zone 1 as the headlamp, the
+  order of SCAN.parts.
+*/
+const DENT = { x: -0.32, y: 0.3, radius: 0.14, depth: 0.075 };
+const CRACK = { x: 0.46, y: 0.67, radius: 0.15 };
+
 // Scan cycle, seconds.
 const SWEEP = 1.8; // plane travels top → bottom
+const CLOUD_OUT = 0.7; // point cloud resolves back into the solid car
 const HOLD_UNTIL = 4.3; // damage stays lit until here
 const FADE = 0.5;
 const CYCLE = 5.6;
@@ -37,6 +49,9 @@ PARTS.forEach((p, i) => {
   uniforms.uZoneMin.value[i].fromArray(ZONES[p.part].min);
   uniforms.uZoneMax.value[i].fromArray(ZONES[p.part].max);
 });
+uniforms.uDent.value.set(DENT.x, DENT.y, DENT.radius, DENT.depth);
+uniforms.uCrack.value.set(CRACK.x, CRACK.y, CRACK.radius, 0);
+const carView = new THREE.Matrix4();
 const toCam = new THREE.Vector3();
 const front = new THREE.Vector3();
 const anchor = new THREE.Vector3();
@@ -74,7 +89,7 @@ export default function CarScene({ colors, reduced, lowEnd, active, cued, intera
       <directionalLight position={[4, 6, 5]} intensity={1.5} />
       <directionalLight position={[-3, 2.5, -4.5]} intensity={2.6} color={colors.sky} />
       <Suspense fallback={null}>
-        <Car colors={colors} reduced={reduced} cued={cued} labels={labels} onReady={onReady} onFirstScan={onFirstScan} />
+        <Car colors={colors} reduced={reduced} lowEnd={lowEnd} cued={cued} labels={labels} onReady={onReady} onFirstScan={onFirstScan} />
       </Suspense>
       <OrbitControls
         enabled={interactive}
@@ -102,11 +117,20 @@ function FrameCap({ fps }: { fps: number }) {
   return null;
 }
 
-function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props, "colors" | "reduced" | "cued" | "labels" | "onReady" | "onFirstScan">) {
+function Car({
+  colors,
+  reduced,
+  lowEnd,
+  cued,
+  labels,
+  onReady,
+  onFirstScan,
+}: Pick<Props, "colors" | "reduced" | "lowEnd" | "cued" | "labels" | "onReady" | "onFirstScan">) {
   const { scene } = useGLTF(MODEL, false, true);
   const invalidate = useThree((s) => s.invalidate);
   const root = useRef<THREE.Group>(null);
   const plane = useRef<THREE.Mesh>(null);
+  const cloudRef = useRef<THREE.Points>(null);
   const state = useRef({ rise: reduced ? 1 : 0, scanClock: -1, readySent: false, scanned: false });
 
 
@@ -126,6 +150,51 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
   }, [scene]);
 
   const planeMaterial = useMemo(() => createScanPlaneMaterial(uniforms), []);
+
+  // The point cloud: points spread over the car's surface by area, nudged
+  // out along the normal so they sit just on top of it. None for reduced
+  // motion (there is no scan); fewer on low-end devices.
+  const cloud = useMemo(() => {
+    if (reduced) return null;
+    const total = lowEnd ? 3500 : 9000;
+    model.updateMatrixWorld(true);
+    const meshes: { mesh: THREE.Mesh; sampler: MeshSurfaceSampler; area: number }[] = [];
+    model.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      const sampler = new MeshSurfaceSampler(o).build();
+      const dist = (sampler as unknown as { distribution: Float32Array }).distribution;
+      meshes.push({ mesh: o, sampler, area: dist[dist.length - 1] ?? 0 });
+    });
+    const sum = meshes.reduce((a, m) => a + m.area, 0) || 1;
+    const positions: number[] = [];
+    const seeds: number[] = [];
+    const p = new THREE.Vector3();
+    const n = new THREE.Vector3();
+    const normalMatrix = new THREE.Matrix3();
+    for (const m of meshes) {
+      normalMatrix.getNormalMatrix(m.mesh.matrixWorld);
+      const count = Math.round((m.area / sum) * total);
+      for (let i = 0; i < count; i++) {
+        m.sampler.sample(p, n);
+        p.applyMatrix4(m.mesh.matrixWorld);
+        n.applyMatrix3(normalMatrix).normalize();
+        p.addScaledVector(n, 0.012);
+        positions.push(p.x, p.y, p.z);
+        // Stable per-point phase for the twinkle (a hash, not Math.random).
+        const k = positions.length / 3;
+        seeds.push(Math.abs(Math.sin(k * 12.9898) * 43758.5453) % 1);
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute("aSeed", new THREE.Float32BufferAttribute(seeds, 1));
+    const material = createCloudMaterial(uniforms);
+    return new THREE.Points(geometry, material);
+  }, [model, reduced, lowEnd]);
+  useEffect(() => () => {
+    cloud?.geometry.dispose();
+    (cloud?.material as THREE.Material | undefined)?.dispose();
+  }, [cloud]);
 
   useEffect(() => {
     uniforms.uSky.value.set(colors.sky);
@@ -159,7 +228,7 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
   }, [cued, reduced]);
 
 
-  useFrame(({ clock, camera, size }, rawDelta) => {
+  useFrame(({ clock, camera, size, viewport }, rawDelta) => {
     const g = root.current;
     if (!g) return;
     const s = state.current;
@@ -176,7 +245,10 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
     g.position.y = (s.rise - 1) * 0.45;
     g.updateMatrixWorld();
     uniforms.uCarInv.value.copy(g.matrixWorld).invert();
+    uniforms.uCarNormal.value.setFromMatrix4(carView.multiplyMatrices(camera.matrixWorldInverse, g.matrixWorld));
     uniforms.uTime.value = t;
+    const pts = cloudRef.current;
+    if (pts) (pts.material as THREE.ShaderMaterial).uniforms.uSize.value = 40 * viewport.dpr;
 
     // Labels fade out when the front of the car turns away from the camera.
     front.set(0, 0, 1).applyQuaternion(g.quaternion);
@@ -198,12 +270,15 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
     if (reduced) return;
 
     let scanOn = 0;
+    let cloudOn = 0;
     if (s.scanClock >= 0) {
       s.scanClock = (s.scanClock + dt) % CYCLE;
       const c = s.scanClock;
       const sweep = Math.min(c / SWEEP, 1);
       uniforms.uScanY.value = THREE.MathUtils.lerp(TOP, BOTTOM, sweepEase(sweep));
       scanOn = c < 0.15 ? c / 0.15 : c < SWEEP - 0.2 ? 1 : Math.max(0, (SWEEP - c) / 0.2);
+      // The cloud builds behind the line, then resolves back into the car.
+      cloudOn = c < 0.15 ? c / 0.15 : c < SWEEP ? 1 : Math.max(0, 1 - (c - SWEEP) / CLOUD_OUT);
 
       PARTS.forEach((p, i) => {
         const z = ZONES[p.part];
@@ -219,6 +294,8 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
       }
     }
     uniforms.uScanOn.value = scanOn;
+    uniforms.uCloud.value = cloudOn;
+    if (pts) pts.visible = cloudOn > 0.001;
     if (plane.current) {
       plane.current.visible = scanOn > 0.001;
       plane.current.position.y = uniforms.uScanY.value;
@@ -229,6 +306,7 @@ function Car({ colors, reduced, cued, labels, onReady, onFirstScan }: Pick<Props
     <>
       <group ref={root}>
         <primitive object={model} />
+        {cloud && <primitive ref={cloudRef} object={cloud} visible={false} />}
         <ContactBlob />
       </group>
       <mesh ref={plane} rotation-x={-Math.PI / 2} material={planeMaterial} visible={false} renderOrder={2}>
